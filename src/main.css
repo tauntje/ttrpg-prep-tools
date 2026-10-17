@@ -181,12 +181,78 @@ button {
 .preview {
   flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   min-width: 0;
-  padding: 24px;
+  min-height: 0;
+}
+
+.preview-viewport {
+  flex: 1;
+  min-height: 0;
   overflow: auto;
+  padding: 24px;
   background-color: var(--color-canvas);
   background-image: radial-gradient(var(--color-canvas-dot) 1px, transparent 1px);
   background-size: 18px 18px;
+}
+
+.preview-viewport.is-pan-ready {
+  cursor: grab;
+}
+
+.preview-viewport.is-panning {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.page-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  min-width: 100%;
+  min-height: 100%;
+}
+
+.zoom-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: var(--color-panel);
+  border-top: 1px solid var(--color-panel-border);
+}
+
+.zoom-slider {
+  width: min(360px, 40vw);
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+
+.zoom-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+  cursor: pointer;
+  color: var(--color-text);
+  background: var(--color-page);
+  border: 1px solid var(--color-panel-border);
+  border-radius: var(--radius-sm);
+}
+
+.zoom-button:hover {
+  color: var(--color-accent-strong);
+  border-color: var(--color-accent);
+}
+
+.zoom-value {
+  min-width: 44px;
+  font-size: 13px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-muted);
 }

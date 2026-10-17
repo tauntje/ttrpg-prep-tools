@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { OrientationToggle } from "../../../shared/components/OrientationToggle";
+import { PageViewport } from "../../../shared/components/PageViewport";
 import { Sidebar } from "../../../shared/components/Sidebar";
 import { DEFAULT_ORIENTATION, pageRule } from "../../../shared/model/page";
 import type { PlacedImage } from "../../../types/image";
@@ -125,7 +126,7 @@ export function OnePageDungeonTab() {
             />
           )}
         </Sidebar>
-        <main className="preview">
+        <PageViewport>
           <PageCanvas
             orientation={orientation}
             images={images}
@@ -138,7 +139,7 @@ export function OnePageDungeonTab() {
             onAddPin={handleAddPin}
             onDeletePin={handleDeletePin}
           />
-        </main>
+        </PageViewport>
       </div>
     </>
   );

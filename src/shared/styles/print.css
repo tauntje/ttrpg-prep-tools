@@ -18,9 +18,20 @@
 
   .preview {
     display: block;
+  }
+
+  .preview-viewport {
+    display: block;
     overflow: visible;
     padding: 0;
     background: none;
+  }
+
+  .page-stage {
+    display: block;
+    width: auto;
+    min-width: 0;
+    min-height: 0;
   }
 
   .page {
