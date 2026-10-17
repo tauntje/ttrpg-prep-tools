@@ -30,7 +30,7 @@ import {
   type ResizeSession,
 } from "../../../shared/model/resize";
 import { pageSizeForOrientation } from "../../../shared/model/page";
-import { pinFractionAt, pinPositionMm, type PinFraction } from "../model/pin";
+import { moveFraction, pinFractionAt, pinPositionMm, type PinFraction } from "../model/pin";
 import { TEXT_BLOCK_THEMES } from "../model/textBlockTheme";
 
 interface PageCanvasProps {
@@ -44,6 +44,7 @@ interface PageCanvasProps {
   onUpdateTextBlock: (id: string, patch: Partial<TextBlock>) => void;
   onAddPin: (imageId: string, fraction: PinFraction) => void;
   onDeletePin: (id: string) => void;
+  onUpdatePin: (id: string, patch: Partial<Pin>) => void;
 }
 
 const NUDGE_STEP_MM = 1;
@@ -60,6 +61,19 @@ interface MoveGesture {
   onMove: (id: string, position: PointMm) => void;
 }
 
+interface PinMoveGesture {
+  id: string;
+  image: PlacedImage;
+  xFraction: number;
+  yFraction: number;
+  clientX: number;
+  clientY: number;
+  mmPerPx: number;
+  pointerId: number;
+  element: HTMLElement;
+  moved: boolean;
+}
+
 export function PageCanvas({
   orientation,
   images,
@@ -71,10 +85,12 @@ export function PageCanvas({
   onUpdateTextBlock,
   onAddPin,
   onDeletePin,
+  onUpdatePin,
 }: PageCanvasProps) {
   const page = pageSizeForOrientation(orientation);
   const areaRef = useRef<HTMLDivElement>(null);
   const moveRef = useRef<MoveGesture | null>(null);
+  const pinMoveRef = useRef<PinMoveGesture | null>(null);
   const resizeRef = useRef<ResizeSession | null>(null);
   const cropRef = useRef<CropSession | null>(null);
   const textResizeRef = useRef<FrameResizeSession | null>(null);
@@ -440,6 +456,116 @@ export function PageCanvas({
     });
   }
 
+  function pinMmPerPx(): number | null {
+    const areaElement = areaRef.current;
+    if (areaElement === null) {
+      return null;
+    }
+
+    const areaRect = areaElement.getBoundingClientRect();
+    if (areaRect.width <= 0) {
+      return null;
+    }
+
+    return page.widthMm / areaRect.width;
+  }
+
+  function handlePinPointerDown(
+    event: ReactPointerEvent<HTMLButtonElement>,
+    pin: Pin,
+    image: PlacedImage
+  ) {
+    if (event.button !== 0) {
+      return;
+    }
+
+    event.stopPropagation();
+
+    const mmPerPx = pinMmPerPx();
+    if (mmPerPx === null) {
+      return;
+    }
+
+    pinMoveRef.current = {
+      id: pin.id,
+      image,
+      xFraction: pin.xFraction,
+      yFraction: pin.yFraction,
+      clientX: event.clientX,
+      clientY: event.clientY,
+      mmPerPx,
+      pointerId: event.pointerId,
+      element: event.currentTarget,
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function handlePinPointerMove(event: ReactPointerEvent<HTMLButtonElement>) {
+    const gesture = pinMoveRef.current;
+    if (gesture === null || gesture.pointerId !== event.pointerId) {
+      return;
+    }
+
+    if (!gesture.moved) {
+      const deltaX = event.clientX - gesture.clientX;
+      const deltaY = event.clientY - gesture.clientY;
+      if (Math.hypot(deltaX, deltaY) < DRAG_THRESHOLD_PX) {
+        return;
+      }
+      gesture.moved = true;
+    }
+
+    const deltaXMm = (event.clientX - gesture.clientX) * gesture.mmPerPx;
+    const deltaYMm = (event.clientY - gesture.clientY) * gesture.mmPerPx;
+    onUpdatePin(
+      gesture.id,
+      moveFraction(
+        gesture.image,
+        { xFraction: gesture.xFraction, yFraction: gesture.yFraction },
+        deltaXMm,
+        deltaYMm
+      )
+    );
+  }
+
+  function handlePinPointerUp(event: ReactPointerEvent<HTMLButtonElement>) {
+    const gesture = pinMoveRef.current;
+    if (gesture === null || gesture.pointerId !== event.pointerId) {
+      return;
+    }
+
+    pinMoveRef.current = null;
+    if (gesture.element.hasPointerCapture(event.pointerId)) {
+      gesture.element.releasePointerCapture(event.pointerId);
+    }
+  }
+
+  function handlePinKeyDown(
+    event: ReactKeyboardEvent<HTMLButtonElement>,
+    pin: Pin,
+    image: PlacedImage
+  ) {
+    const stepMm = event.shiftKey ? NUDGE_STEP_FAST_MM : NUDGE_STEP_MM;
+    let deltaXMm = 0;
+    let deltaYMm = 0;
+
+    if (event.key === "ArrowLeft") {
+      deltaXMm = -stepMm;
+    } else if (event.key === "ArrowRight") {
+      deltaXMm = stepMm;
+    } else if (event.key === "ArrowUp") {
+      deltaYMm = -stepMm;
+    } else if (event.key === "ArrowDown") {
+      deltaYMm = stepMm;
+    } else {
+      return;
+    }
+
+    event.preventDefault();
+    onUpdatePin(pin.id, moveFraction(image, pin, deltaXMm, deltaYMm));
+  }
+
   return (
     <section
       className="page"
@@ -584,7 +710,11 @@ export function PageCanvas({
               className={`pin-marker${selected ? " is-selected" : ""}`}
               style={{ left: `${position.xMm}mm`, top: `${position.yMm}mm` }}
               aria-label={`Pin ${pin.number}`}
-              onPointerDown={(event) => event.stopPropagation()}
+              onPointerDown={(event) => handlePinPointerDown(event, pin, image)}
+              onPointerMove={handlePinPointerMove}
+              onPointerUp={handlePinPointerUp}
+              onPointerCancel={handlePinPointerUp}
+              onKeyDown={(event) => handlePinKeyDown(event, pin, image)}
               onClick={(event) => {
                 event.stopPropagation();
                 onSelect(pin.id);

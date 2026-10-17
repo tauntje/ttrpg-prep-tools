@@ -18,9 +18,14 @@
   border-radius: 50%;
   box-shadow: 0 0 0 0.3mm var(--color-accent-strong);
   transform: translate(-50%, -50%);
-  cursor: pointer;
+  cursor: grab;
   touch-action: none;
+  user-select: none;
   -webkit-appearance: none;
+}
+
+.pin-marker:active {
+  cursor: grabbing;
 }
 
 .pin-marker:hover {

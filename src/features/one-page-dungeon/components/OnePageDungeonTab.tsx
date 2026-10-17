@@ -5,6 +5,7 @@ import { PageViewport } from "../../../shared/components/PageViewport";
 import { Sidebar } from "../../../shared/components/Sidebar";
 import { pageRule } from "../../../shared/model/page";
 import type { PlacedImage } from "../../../types/image";
+import type { Pin } from "../../../types/pin";
 import type { TextBlock } from "../../../types/textBlock";
 import { ImageImporter } from "./ImageImporter";
 import { PageCanvas } from "./PageCanvas";
@@ -87,6 +88,12 @@ export function OnePageDungeonTab() {
     setPins((current) => renumberPins(current.filter((pin) => pin.id !== id)));
   }
 
+  function handleUpdatePin(id: string, patch: Partial<Pin>) {
+    setPins((current) =>
+      current.map((pin) => (pin.id === id ? { ...pin, ...patch } : pin))
+    );
+  }
+
   function handleUpdateImage(id: string, patch: Partial<PlacedImage>) {
     setImages((current) =>
       current.map((image) => (image.id === id ? { ...image, ...patch } : image))
@@ -144,6 +151,7 @@ export function OnePageDungeonTab() {
             onUpdateTextBlock={handleUpdateTextBlock}
             onAddPin={handleAddPin}
             onDeletePin={handleDeletePin}
+            onUpdatePin={handleUpdatePin}
           />
         </PageViewport>
       </div>

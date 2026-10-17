@@ -1,0 +1,231 @@
+# Persist changes in a SQLite database
+
+Date: 2026-10-17.
+
+## Goal
+
+The target is a Tauri desktop app. The browser build can stay as a fallback.
+
+## Answer to the main question
+
+Yes, the current stack works with Tauri. The machine already has the tools.
+
+- The frontend is React, TypeScript and Vite. Tauri v2 uses any frontend.
+- The machine has Rust 1.91.0 and Cargo 1.91.0. The SQL plugin needs Rust 1.90 or later.
+- The machine has the Xcode Command Line Tools. Tauri needs them on macOS.
+- The machine has Node.js 26.3.0.
+- The current `npm run build` command runs `tsc --noEmit` and `vite build`. Tauri can call this command.
+
+One rule conflict remains. `AGENTS.md` says: "Do not add a server or a database." Tauri is a desktop shell, not a server. A SQLite file is a database. Change the rule before you add the database.
+
+The Tauri CLI is not on the machine. Add it as a development dependency.
+
+## State of the app now
+
+The app is a browser app. It uses React, TypeScript and Vite. There is no server and no database.
+
+All the state lives in React `useState` hooks in `src/app/App.tsx`. A page reload removes the state and every change.
+
+`src/storage/designRepository.ts` holds the `DesignRepository` interface. The interface has two methods, `save` and `load`. No code implements the interface. This file is the correct place for persistence.
+
+The `.gitignore` file already excludes `src-tauri/target` and `src-tauri/gen`. This shows the plan for Tauri.
+
+## Data to save
+
+The app holds one `Design` object. The types are in `src/types/`.
+
+- `Design`: `id`, `page`, `orientation` and `images`.
+- `PageSize`: `widthMm` and `heightMm`.
+- `PlacedImage`: `id`, `name`, `src`, `xMm`, `yMm` and `widthMm`.
+
+`PlacedImage.src` is a data URL. It holds the complete image as base64 text. An image can be more than 1 MB.
+
+In Tauri, save the image files in the app data directory. Store the file path in the database. This keeps the database small.
+
+The plan in `plan.md` adds pins, text blocks, cards and tokens. The schema must grow with them.
+
+## Option A: Tauri SQL plugin (recommended for the Tauri target)
+
+Use `tauri-plugin-sql`, version 2.6.0, with the `sqlite` feature. The frontend uses `@tauri-apps/plugin-sql`, version 2.6.0.
+
+Advantages:
+
+- The plugin uses a native SQLite file. There is no WebAssembly and no OPFS.
+- The plugin runs SQLite through `sqlx` in Rust.
+- The frontend gets a simple API, `Database.load`.
+- The plugin supports migrations. Define them in Rust.
+- The plugin needs no COOP or COEP headers.
+- The database file survives a browser storage cleanup.
+
+Disadvantages:
+
+- The app must run as a Tauri build. A plain web page cannot use this plugin.
+- The first Rust build is slow.
+- You must set the plugin permissions in `src-tauri/capabilities/default.json`.
+
+## Option B: SQLite WASM in the browser (fallback)
+
+Keep this option if you need the web build. The SQLite team publishes the official build as `@sqlite.org/sqlite-wasm`, version 3.53.4-build2. A Web Worker loads the module. The `opfs-sahpool` VFS stores the database in the Origin Private File System.
+
+Advantages:
+
+- The web page gets persistence with no server.
+- The `opfs-sahpool` VFS does not need the COOP and COEP headers.
+- The package supports Chromium, Firefox 111 or later, and Safari 16.4 or later.
+
+Disadvantages:
+
+- You need a Web Worker for OPFS.
+- One tab holds the database lock. A second tab gets an `SQLITE_BUSY` error.
+- The browser can clear OPFS. The user must export a backup file.
+- The code cannot use the Tauri SQL plugin.
+
+`sql.js` and `wa-sqlite` are not a good fit here. The Tauri target gives a native SQLite file.
+
+## Setup steps for Tauri
+
+1. Add the CLI. Run `npm install -D @tauri-apps/cli@^2`.
+2. Start Tauri. Run `npx tauri init`.
+3. Add the plugin. Run `npm run tauri add sql`.
+4. Enable the SQLite driver. Run `cargo add tauri-plugin-sql --features sqlite` in `src-tauri`.
+5. Add the migrations in `src-tauri/src/lib.rs`.
+6. Register the connection in `tauri.conf.json`.
+7. Add the permissions to `src-tauri/capabilities/default.json`.
+8. Add `src/storage/tauriDesignRepository.ts`. Keep the `DesignRepository` interface.
+
+Set these values in `src-tauri/tauri.conf.json`:
+
+```json
+{
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../dist"
+  }
+}
+```
+
+Update `vite.config.ts` for the Tauri dev server:
+
+```ts
+export default defineConfig({
+  plugins: [react()],
+  clearScreen: false,
+  server: {
+    port: 5173,
+    strictPort: true,
+  },
+});
+```
+
+Add these permissions to `src-tauri/capabilities/default.json`:
+
+```json
+{
+  "permissions": ["sql:default", "sql:allow-execute"]
+}
+```
+
+## Schema
+
+The first version needs two tables. The `image` table stores the image bytes, not the data URL.
+
+```sql
+CREATE TABLE IF NOT EXISTS design (
+  id TEXT PRIMARY KEY,
+  page_width_mm REAL NOT NULL,
+  page_height_mm REAL NOT NULL,
+  orientation TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS image (
+  id TEXT PRIMARY KEY,
+  design_id TEXT NOT NULL REFERENCES design(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  mime_type TEXT NOT NULL,
+  data BLOB NOT NULL,
+  x_mm REAL NOT NULL,
+  y_mm REAL NOT NULL,
+  width_mm REAL NOT NULL,
+  z_index INTEGER NOT NULL
+);
+```
+
+Add these tables for the plan in `plan.md`:
+
+```sql
+CREATE TABLE IF NOT EXISTS pin (
+  id TEXT PRIMARY KEY,
+  design_id TEXT NOT NULL REFERENCES design(id) ON DELETE CASCADE,
+  number INTEGER NOT NULL,
+  x_mm REAL NOT NULL,
+  y_mm REAL NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS text_block (
+  id TEXT PRIMARY KEY,
+  design_id TEXT NOT NULL REFERENCES design(id) ON DELETE CASCADE,
+  kind TEXT NOT NULL,
+  title TEXT NOT NULL,
+  subtitle TEXT NOT NULL,
+  body TEXT NOT NULL,
+  colour TEXT NOT NULL,
+  x_mm REAL NOT NULL,
+  y_mm REAL NOT NULL,
+  width_mm REAL NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS card (
+  id TEXT PRIMARY KEY,
+  design_id TEXT NOT NULL REFERENCES design(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  subtitle TEXT NOT NULL,
+  body TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS token (
+  id TEXT PRIMARY KEY,
+  design_id TEXT NOT NULL REFERENCES design(id) ON DELETE CASCADE,
+  image_id TEXT NOT NULL REFERENCES image(id),
+  size_mm REAL NOT NULL,
+  ring_colour TEXT NOT NULL
+);
+```
+
+The `data` column holds the image bytes. The code can rebuild the data URL from `mime_type` and the bytes.
+
+In Tauri, replace `data BLOB` with `file_path TEXT`. Save the image file in the app data directory. Then the database holds a small row.
+
+## Integration steps
+
+1. Implement `TauriDesignRepository` in `src/storage/`. The class uses `Database.load`.
+2. Keep the `DesignRepository` interface. The components do not change.
+3. Load the design in `App` on start. Use `useEffect`.
+4. Add a delayed save. A save on each pointer move is too much.
+5. Add export and import controls for the database file.
+
+## Risks and limits
+
+- `AGENTS.md` forbids a database. Change the rule.
+- The first Rust build is slow.
+- The dev server port must be 5173. Set `strictPort` to `true`.
+- The default SQL permission set does not allow `execute`. Add `sql:allow-execute`.
+- The database file lives in the app config directory. The user cannot find it easily. Add export.
+- A plain web build cannot use the Tauri plugin.
+- The image files can grow. Save them on disk.
+
+## Open questions
+
+- Do you keep the browser build? If yes, you need two repository implementations.
+- Do you want one design, or many designs?
+- Do you want the images as BLOBs or as files?
+
+## Sources
+
+- Tauri, "SQL", <https://v2.tauri.app/plugin/sql/>, checked 2026-10-17.
+- Tauri, "Vite", <https://v2.tauri.app/start/frontend/vite/>, checked 2026-10-17.
+- Tauri, "Prerequisites", <https://v2.tauri.app/start/prerequisites/>, checked 2026-10-17.
+- SQLite, "Persistent Storage Options", <https://sqlite.org/wasm/doc/trunk/persistence.md>, checked 2026-10-17.
+- npm and crates.io registry versions, checked 2026-10-17.

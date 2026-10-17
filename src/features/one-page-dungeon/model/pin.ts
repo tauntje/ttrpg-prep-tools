@@ -78,3 +78,24 @@ export function pinFractionAt(
 function clampFraction(value: number): number {
   return Math.min(Math.max(value, 0), 1);
 }
+
+/**
+ * Move a pin point by a page distance in millimetres.
+ * The function keeps the pin inside the image content.
+ */
+export function moveFraction(
+  image: PlacedImage,
+  fraction: PinFraction,
+  deltaXMm: number,
+  deltaYMm: number
+): PinFraction {
+  const contentHeightMm = image.imageWidthMm * image.aspectRatio;
+  if (image.imageWidthMm <= 0 || contentHeightMm <= 0) {
+    return fraction;
+  }
+
+  return {
+    xFraction: clampFraction(fraction.xFraction + deltaXMm / image.imageWidthMm),
+    yFraction: clampFraction(fraction.yFraction + deltaYMm / contentHeightMm),
+  };
+}
