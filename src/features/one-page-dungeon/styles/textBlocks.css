@@ -99,7 +99,7 @@
 }
 
 .text-block p.text-block-subtitle {
-  margin: 0 0 1.5mm;
+  margin: 2pt 0 0;
   font-size: 12pt;
   font-weight: 400;
   color: var(--color-text-subtitle);
@@ -119,7 +119,7 @@
 }
 
 .text-block h2 {
-  margin: 0 0 1.5mm;
+  margin: 0;
   font-size: 14pt;
   font-weight: 700;
   text-decoration: underline;
@@ -132,15 +132,20 @@
   line-height: 1.35;
 }
 
+.text-block-body {
+  white-space: normal;
+}
+
 .text-block-body p {
-  margin: 0 0 1mm;
+  margin: 0;
 }
 
 .text-block-body ul {
-  margin: 0 0 1mm;
+  margin: 1pt 0 0;
   padding-left: 5mm;
 }
 
-.text-block-body li {
+.text-block-body li,
+.text-block-body li p {
   margin: 0;
 }
