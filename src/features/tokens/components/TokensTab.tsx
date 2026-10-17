@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { OrientationToggle } from "../../../shared/components/OrientationToggle";
+import { PageViewport } from "../../../shared/components/PageViewport";
 import { Sidebar } from "../../../shared/components/Sidebar";
 import {
   DEFAULT_ORIENTATION,
@@ -34,7 +35,7 @@ export function TokensTab() {
             <p>The editor comes later.</p>
           </section>
         </Sidebar>
-        <main className="preview">
+        <PageViewport>
           <section
             className="page"
             aria-label={`A4 page, ${orientation}`}
@@ -42,7 +43,7 @@ export function TokensTab() {
           >
             <div className="page-content" />
           </section>
-        </main>
+        </PageViewport>
       </div>
     </>
   );

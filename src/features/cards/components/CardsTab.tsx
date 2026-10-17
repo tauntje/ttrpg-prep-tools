@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { OrientationToggle } from "../../../shared/components/OrientationToggle";
+import { PageViewport } from "../../../shared/components/PageViewport";
 import { Sidebar } from "../../../shared/components/Sidebar";
 import {
   DEFAULT_ORIENTATION,
@@ -32,7 +33,7 @@ export function CardsTab() {
             <p>Each page holds {grid.perPage} cards. The editor comes later.</p>
           </section>
         </Sidebar>
-        <main className="preview">
+        <PageViewport>
           <section
             className="page"
             aria-label={`A4 page, ${orientation}`}
@@ -40,7 +41,7 @@ export function CardsTab() {
           >
             <div className="page-content" />
           </section>
-        </main>
+        </PageViewport>
       </div>
     </>
   );
