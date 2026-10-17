@@ -1,3 +1,4 @@
+import type { Pin } from "../../../types/pin";
 import type { TextBlock, TextBlockThemeId, TextBlockType } from "../../../types/textBlock";
 
 const DEFAULT_TITLE: Record<TextBlockType, string> = {
@@ -28,4 +29,41 @@ export function createTextBlock(type: TextBlockType, index: number): TextBlock {
     widthMm: DEFAULT_WIDTH_MM,
     heightMm: DEFAULT_HEIGHT_MM,
   };
+}
+
+/**
+ * Create the legend text block for a pin.
+ * Use the pin number as the title.
+ */
+export function createLegendTextBlock(
+  pinId: string,
+  number: number,
+  index: number
+): TextBlock {
+  return {
+    ...createTextBlock("legend", index),
+    pinId,
+    title: String(number),
+  };
+}
+
+/**
+ * Set the title of each linked text block to the pin number.
+ */
+export function syncLegendTitles(
+  pins: Pin[],
+  textBlocks: TextBlock[]
+): TextBlock[] {
+  return textBlocks.map((textBlock) => {
+    if (textBlock.pinId === undefined) {
+      return textBlock;
+    }
+
+    const pin = pins.find((item) => item.id === textBlock.pinId);
+    if (pin === undefined) {
+      return textBlock;
+    }
+
+    return { ...textBlock, title: String(pin.number) };
+  });
 }

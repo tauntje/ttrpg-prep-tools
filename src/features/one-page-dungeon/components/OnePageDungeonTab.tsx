@@ -17,6 +17,7 @@ import {
   renumberPins,
   type PinFraction,
 } from "../model/pin";
+import { createLegendTextBlock, syncLegendTitles } from "../model/textBlock";
 
 export function OnePageDungeonTab() {
   const {
@@ -67,7 +68,7 @@ export function OnePageDungeonTab() {
 
     window.addEventListener("keydown", handleDeleteKey);
     return () => window.removeEventListener("keydown", handleDeleteKey);
-  }, [selectedId]);
+  }, [selectedId, images, pins, textBlocks]);
 
   function handleInsertTextBlock(textBlock: TextBlock) {
     setTextBlocks((current) => [...current, textBlock]);
@@ -78,14 +79,18 @@ export function OnePageDungeonTab() {
   }
 
   function handleAddPin(imageId: string, fraction: PinFraction) {
-    setPins((current) => [
-      ...current,
-      createPin(imageId, fraction, nextPinNumber(current)),
-    ]);
+    const number = nextPinNumber(pins);
+    const pin = createPin(imageId, fraction, number);
+    const legend = createLegendTextBlock(pin.id, number, textBlocks.length);
+    setPins((current) => [...current, pin]);
+    setTextBlocks((current) => [...current, legend]);
   }
 
   function handleDeletePin(id: string) {
-    setPins((current) => renumberPins(current.filter((pin) => pin.id !== id)));
+    const remainingPins = renumberPins(pins.filter((pin) => pin.id !== id));
+    const remainingBlocks = textBlocks.filter((textBlock) => textBlock.pinId !== id);
+    setPins(remainingPins);
+    setTextBlocks(syncLegendTitles(remainingPins, remainingBlocks));
   }
 
   function handleUpdatePin(id: string, patch: Partial<Pin>) {
@@ -101,8 +106,18 @@ export function OnePageDungeonTab() {
   }
 
   function handleDeleteImage(id: string) {
+    const removedPinIds = new Set(
+      pins.filter((pin) => pin.imageId === id).map((pin) => pin.id)
+    );
+    const remainingPins = renumberPins(pins.filter((pin) => pin.imageId !== id));
+    const remainingBlocks = textBlocks.filter(
+      (textBlock) =>
+        textBlock.pinId === undefined || !removedPinIds.has(textBlock.pinId)
+    );
+
     setImages((current) => current.filter((image) => image.id !== id));
-    setPins((current) => renumberPins(current.filter((pin) => pin.imageId !== id)));
+    setPins(remainingPins);
+    setTextBlocks(syncLegendTitles(remainingPins, remainingBlocks));
   }
 
   function handleUpdateTextBlock(id: string, patch: Partial<TextBlock>) {
