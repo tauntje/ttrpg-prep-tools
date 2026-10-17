@@ -1,4 +1,5 @@
 import type { TextBlock, TextBlockThemeId } from "../../../types/textBlock";
+import { TextControl } from "../../../shared/components/TextControl";
 import { TEXT_BLOCK_THEME_LIST } from "../model/textBlockTheme";
 
 interface TextBlockFormProps {
@@ -25,26 +26,25 @@ export function TextBlockForm({ textBlock, onChange }: TextBlockFormProps) {
       </label>
       <label className="text-block-field">
         Title
-        <input
-          type="text"
+        <TextControl
           value={textBlock.title}
-          onChange={(event) => onChange({ title: event.target.value })}
+          onChange={(title) => onChange({ title })}
         />
       </label>
       <label className="text-block-field">
         Subtitle
-        <input
-          type="text"
+        <TextControl
           value={textBlock.subtitle}
-          onChange={(event) => onChange({ subtitle: event.target.value })}
+          onChange={(subtitle) => onChange({ subtitle })}
         />
       </label>
       <label className="text-block-field">
         Content
-        <textarea
+        <TextControl
+          multiline
           rows={4}
           value={textBlock.text}
-          onChange={(event) => onChange({ text: event.target.value })}
+          onChange={(text) => onChange({ text })}
         />
       </label>
     </div>
