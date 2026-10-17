@@ -1,0 +1,13 @@
+.page {
+  position: relative;
+  background: var(--color-page);
+  color: var(--color-ink);
+  box-shadow: var(--shadow-page);
+  overflow: hidden;
+  zoom: var(--page-zoom);
+}
+
+.page-content {
+  position: relative;
+  height: 100%;
+}

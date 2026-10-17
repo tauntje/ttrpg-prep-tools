@@ -1,5 +1,5 @@
-import type { PointerPosition, RectSize } from "./drag";
-import { MIN_FRAME_MM, type ResizeCorner } from "./resize";
+import type { PointerPosition, RectSize } from "../../../shared/model/drag";
+import { MIN_FRAME_MM, type ResizeCorner } from "../../../shared/model/resize";
 
 export interface FrameBox {
   id: string;

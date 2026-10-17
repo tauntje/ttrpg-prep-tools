@@ -1,6 +1,6 @@
 import type { PlacedImage } from "../../../types/image";
-import type { PointerPosition, RectSize } from "./drag";
-import { MIN_FRAME_MM } from "./resize";
+import type { PointerPosition, RectSize } from "../../../shared/model/drag";
+import { MIN_FRAME_MM } from "../../../shared/model/resize";
 
 export type CropEdge = "n" | "s" | "w" | "e";
 

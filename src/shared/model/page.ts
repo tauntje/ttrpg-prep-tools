@@ -1,4 +1,4 @@
-import type { PageOrientation, PageSize } from "../../../types/page";
+import type { PageOrientation, PageSize } from "../../types/page";
 
 export const A4_PORTRAIT: PageSize = {
   widthMm: 210,
@@ -17,3 +17,11 @@ export function pageSizeForOrientation(orientation: PageOrientation): PageSize {
 }
 
 export const DEFAULT_PAGE: PageSize = pageSizeForOrientation(DEFAULT_ORIENTATION);
+
+/**
+ * Make the CSS page rule for the print output.
+ * The active tab renders this rule. The other tabs do not.
+ */
+export function pageRule(orientation: PageOrientation): string {
+  return `@page { size: A4 ${orientation}; }`;
+}

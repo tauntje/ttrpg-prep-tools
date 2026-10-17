@@ -1,4 +1,4 @@
-import type { PageOrientation } from "../../../types/page";
+import type { PageOrientation } from "../../types/page";
 
 interface OrientationToggleProps {
   orientation: PageOrientation;

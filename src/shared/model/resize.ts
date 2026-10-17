@@ -1,4 +1,4 @@
-import type { PlacedImage } from "../../../types/image";
+import type { PlacedImage } from "../../types/image";
 import type { PointerPosition, RectSize } from "./drag";
 
 export type ResizeCorner = "nw" | "ne" | "sw" | "se";

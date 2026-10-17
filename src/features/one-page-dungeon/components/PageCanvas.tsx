@@ -10,7 +10,7 @@ import {
   startDrag,
   type DragSession,
   type PointMm,
-} from "../model/drag";
+} from "../../../shared/model/drag";
 import { cropTo, startCrop, type CropEdge, type CropSession } from "../model/crop";
 import {
   frameResizeTo,
@@ -22,8 +22,8 @@ import {
   startResize,
   type ResizeCorner,
   type ResizeSession,
-} from "../model/resize";
-import { pageSizeForOrientation } from "../model/page";
+} from "../../../shared/model/resize";
+import { pageSizeForOrientation } from "../../../shared/model/page";
 
 interface PageCanvasProps {
   orientation: PageOrientation;
