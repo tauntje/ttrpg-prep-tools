@@ -40,52 +40,78 @@
 }
 
 .card {
+  position: relative;
   box-sizing: border-box;
   width: 100%;
   height: 100%;
-  padding: 4mm;
+  padding: 6mm 5mm;
   overflow: hidden;
+  font-family: Georgia, "Times New Roman", serif;
   color: var(--color-ink);
   background: var(--color-page);
-  border: 0.4mm solid var(--color-panel-border);
-  border-radius: 2mm;
+  border: 0.4mm solid var(--color-accent-soft);
+  border-radius: 2.5mm;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 1.6mm;
+  background: var(--color-accent);
+}
+
+.card-header {
+  text-align: center;
 }
 
 .card h2 {
   margin: 0;
   overflow-wrap: anywhere;
-  font-size: 13pt;
+  font-size: 17pt;
   font-weight: 700;
-  line-height: 1.15;
+  line-height: 1.1;
+  letter-spacing: 0.015em;
   color: var(--color-accent-strong);
 }
 
 .card-subtitle {
   margin: 1.5mm 0 0;
   overflow-wrap: anywhere;
-  font-size: 9pt;
+  font-size: 11pt;
   font-style: italic;
   line-height: 1.2;
   color: var(--color-muted);
 }
 
+.card-header::after {
+  content: "";
+  display: block;
+  width: 14mm;
+  height: 0.6mm;
+  margin: 2.5mm auto 0;
+  background: var(--color-accent);
+  border-radius: 1mm;
+}
+
 .card-body {
-  margin-top: 2mm;
-  padding-top: 2mm;
+  margin-top: 3mm;
   overflow-wrap: anywhere;
-  font-size: 9pt;
-  line-height: 1.35;
-  border-top: 0.3mm solid var(--color-accent-soft);
+  font-size: 11pt;
+  line-height: 1.4;
+  text-align: left;
 }
 
 .card-body p {
-  margin: 0 0 1mm;
+  margin: 0 0 1.5mm;
 }
 
 .card-body ul,
 .card-body ol {
   margin: 0;
-  padding-left: 4mm;
+  padding-left: 5mm;
 }
 
 .card-body li {
