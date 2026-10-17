@@ -1,0 +1,13 @@
+.page {
+  position: relative;
+  background: var(--color-page);
+  color: var(--color-ink);
+  box-shadow: 0 2px 12px rgb(0 0 0 / 40%);
+  padding: 20mm;
+  overflow: hidden;
+  zoom: var(--page-zoom);
+}
+
+.page-content h2 {
+  margin-top: 0;
+}

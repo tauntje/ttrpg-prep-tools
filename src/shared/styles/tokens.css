@@ -1,0 +1,12 @@
+:root {
+  --page-zoom: 0.6;
+  --font-sans: system-ui, sans-serif;
+  --color-canvas: #6b6b6b;
+  --color-page: #ffffff;
+  --color-ink: #000000;
+  --color-shell-bg: #1f1f1f;
+  --color-shell-ink: #ffffff;
+  --color-panel: #f2f2f2;
+  --color-panel-border: #d0d0d0;
+  --color-muted: #888888;
+}
