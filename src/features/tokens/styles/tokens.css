@@ -1,1 +1,290 @@
 /* Styles for the token maker. The shared page frame lives in src/shared/styles/page.css. */
+
+.token-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin: auto;
+}
+
+.token-page-content {
+  position: relative;
+  height: 100%;
+}
+
+.token-page-hint {
+  margin: 0;
+  padding: 20mm;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.token-slot {
+  position: absolute;
+  border-radius: 50%;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.token-slot:active {
+  cursor: grabbing;
+}
+
+.token-slot:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2mm;
+}
+
+.token-slot.is-selected::after {
+  content: "";
+  position: absolute;
+  inset: -1mm;
+  border: 0.4mm solid var(--color-accent);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.token {
+  position: relative;
+  overflow: hidden;
+  background: var(--color-page);
+  border-radius: 50%;
+}
+
+.token-image {
+  position: absolute;
+  height: auto;
+  max-width: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.token-ring {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-style: solid;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* Editor */
+
+.token-list,
+.token-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.token-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.token-list h3,
+.token-form h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.token-importer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.token-importer button,
+.token-delete {
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--color-text);
+  background: var(--color-page);
+  border: 1px solid var(--color-panel-border);
+  border-radius: var(--radius-sm);
+}
+
+.token-importer button:hover {
+  color: var(--color-accent-strong);
+  border-color: var(--color-accent);
+}
+
+.token-importer-input {
+  display: none;
+}
+
+.token-importer-error {
+  margin: 0;
+  font-size: 12px;
+  text-align: right;
+  color: var(--color-accent-strong);
+}
+
+.token-list-empty {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-muted);
+}
+
+.token-list-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.token-list-items button {
+  box-sizing: border-box;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 8px 10px;
+  overflow: hidden;
+  font-size: 13px;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--color-text);
+  background: var(--color-page);
+  border: 1px solid var(--color-panel-border);
+  border-radius: var(--radius-sm);
+}
+
+.token-list-items button:hover {
+  border-color: var(--color-accent);
+}
+
+.token-list-items button.is-active {
+  color: var(--color-accent-strong);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+}
+
+.token-list-thumb {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  background: var(--color-accent-soft);
+  border: 2px solid var(--color-panel-border);
+  border-radius: 50%;
+}
+
+.token-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.token-field input[type="text"],
+.token-field input[type="color"],
+.token-field input[type="range"] {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.token-field input[type="text"] {
+  padding: 6px 8px;
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-page);
+  border: 1px solid var(--color-panel-border);
+  border-radius: var(--radius-sm);
+}
+
+.token-field input[type="text"]:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+.token-field input[type="color"] {
+  height: 30px;
+  padding: 2px;
+  background: var(--color-page);
+  border: 1px solid var(--color-panel-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.token-size-field {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.token-size-field legend {
+  padding: 0;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.token-size-options {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.token-size-option {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  background: var(--color-page);
+  border: 1px solid var(--color-panel-border);
+  border-radius: var(--radius-sm);
+}
+
+.token-size-option:has(input:checked) {
+  color: var(--color-accent-strong);
+  background: var(--color-accent-soft);
+  border-color: var(--color-accent);
+}
+
+.token-delete {
+  align-self: flex-start;
+  color: var(--color-accent-strong);
+  border-color: var(--color-accent-soft);
+}
+
+.token-delete:hover {
+  color: #ffffff;
+  background: var(--color-accent);
+  border-color: var(--color-accent-strong);
+}
+
+.token-summary {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--color-muted);
+}
+
+@media print {
+  .token-sheet {
+    display: block;
+    gap: 0;
+  }
+
+  .token-page:last-child {
+    break-after: auto;
+  }
+
+  .token-slot.is-selected::after {
+    display: none;
+  }
+}
