@@ -6,19 +6,31 @@ interface CardListProps {
   selectedId: string | null;
   onSelect: (id: string) => void;
   onInsert: () => void;
+  onToggleLibrary: () => void;
 }
 
 /**
  * Show the cards that are on the sheet. The user selects a card to edit it.
  */
-export function CardList({ cards, selectedId, onSelect, onInsert }: CardListProps) {
+export function CardList({
+  cards,
+  selectedId,
+  onSelect,
+  onInsert,
+  onToggleLibrary,
+}: CardListProps) {
   return (
     <div className="card-list">
       <div className="card-list-head">
         <h3>Cards</h3>
-        <button type="button" onClick={onInsert}>
-          Insert card
-        </button>
+        <div className="card-list-actions">
+          <button type="button" onClick={onInsert}>
+            Insert card
+          </button>
+          <button type="button" onClick={onToggleLibrary}>
+            Library
+          </button>
+        </div>
       </div>
       {cards.length === 0 ? (
         <p className="card-list-empty">No cards. Select Insert card.</p>

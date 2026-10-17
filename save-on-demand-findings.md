@@ -51,10 +51,7 @@ Reuse `CardView` and `TokenView`. Put each view in a fixed box. Scale the box wi
 Card preview:
 
 ```tsx
-<div
-  className="card-preview"
-  style={{ width: "60mm", height: "80mm", zoom: 0.4 }}
->
+<div className="card-preview" style={{ width: "60mm", height: "80mm", zoom: 0.4 }}>
   <CardView card={card} />
 </div>
 ```
