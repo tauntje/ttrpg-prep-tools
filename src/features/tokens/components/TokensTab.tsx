@@ -2,22 +2,50 @@ import { useState } from "react";
 import { OrientationToggle } from "../../../shared/components/OrientationToggle";
 import { PageViewport } from "../../../shared/components/PageViewport";
 import { Sidebar } from "../../../shared/components/Sidebar";
-import {
-  DEFAULT_ORIENTATION,
-  pageRule,
-  pageSizeForOrientation,
-} from "../../../shared/model/page";
-import { sheetGrid } from "../../../shared/model/sheet";
+import { DEFAULT_ORIENTATION, pageRule } from "../../../shared/model/page";
 import type { PageOrientation } from "../../../types/page";
-import { TOKEN_GAP_MM, TOKEN_MARGIN_MM, TOKEN_SIZES_MM, tokenItemSize } from "../model/token";
+import type { Token } from "../../../types/token";
+import { TokenForm } from "./TokenForm";
+import { TokenList } from "./TokenList";
+import { TokenSheet } from "./TokenSheet";
+import { clampImageOffset, TOKEN_SIZES_MM, tokenPages, tokenSizeLabel } from "../model/token";
 
 export function TokensTab() {
   const [orientation, setOrientation] = useState<PageOrientation>(DEFAULT_ORIENTATION);
-  const page = pageSizeForOrientation(orientation);
-  const capacities = TOKEN_SIZES_MM.map((sizeMm) => ({
-    sizeMm,
-    perPage: sheetGrid(page, tokenItemSize(sizeMm), TOKEN_GAP_MM, TOKEN_MARGIN_MM).perPage,
-  }));
+  const [tokens, setTokens] = useState<Token[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const selectedToken = tokens.find((token) => token.id === selectedId);
+  const pageCount = Math.max(tokenPages(orientation, tokens).length, 1);
+  const sizeLabels = TOKEN_SIZES_MM.map(tokenSizeLabel).join(", ");
+
+  function handleImport(token: Token) {
+    setTokens((current) => [...current, token]);
+    setSelectedId(token.id);
+  }
+
+  function handleUpdateToken(id: string, patch: Partial<Token>) {
+    setTokens((current) =>
+      current.map((token) => {
+        if (token.id !== id) {
+          return token;
+        }
+
+        const next = { ...token, ...patch };
+        const offset = clampImageOffset(next, next.imageXMm, next.imageYMm);
+        return { ...next, ...offset };
+      })
+    );
+  }
+
+  function handleMoveImage(id: string, offset: { xMm: number; yMm: number }) {
+    handleUpdateToken(id, { imageXMm: offset.xMm, imageYMm: offset.yMm });
+  }
+
+  function handleRemoveToken(id: string) {
+    setTokens((current) => current.filter((token) => token.id !== id));
+    setSelectedId((current) => (current === id ? null : current));
+  }
 
   return (
     <>
@@ -25,24 +53,33 @@ export function TokensTab() {
       <div className="workspace">
         <Sidebar>
           <OrientationToggle orientation={orientation} onChange={setOrientation} />
-          <section className="placeholder">
-            <h3>Token maker</h3>
-            {capacities.map(({ sizeMm, perPage }) => (
-              <p key={sizeMm}>
-                {sizeMm} mm tokens: {perPage} on each page.
-              </p>
-            ))}
-            <p>The editor comes later.</p>
-          </section>
+          <TokenList
+            tokens={tokens}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onImport={handleImport}
+          />
+          {selectedToken !== undefined && (
+            <TokenForm
+              token={selectedToken}
+              onChange={(patch) => handleUpdateToken(selectedToken.id, patch)}
+              onDelete={() => handleRemoveToken(selectedToken.id)}
+            />
+          )}
+          <p className="token-summary">
+            Token sizes: {sizeLabels}. {tokens.length} token
+            {tokens.length === 1 ? "" : "s"} on {pageCount} page
+            {pageCount === 1 ? "" : "s"}.
+          </p>
         </Sidebar>
         <PageViewport>
-          <section
-            className="page"
-            aria-label={`A4 page, ${orientation}`}
-            style={{ width: `${page.widthMm}mm`, height: `${page.heightMm}mm` }}
-          >
-            <div className="page-content" />
-          </section>
+          <TokenSheet
+            orientation={orientation}
+            tokens={tokens}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onMoveImage={handleMoveImage}
+          />
         </PageViewport>
       </div>
     </>

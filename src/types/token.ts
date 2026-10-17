@@ -6,6 +6,7 @@ export interface Token {
   src: string;
   sizeMm: TokenSizeMm;
   ringColour: string;
+  imageAspect: number;
   imageXMm: number;
   imageYMm: number;
   imageScale: number;
