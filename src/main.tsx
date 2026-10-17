@@ -1,6 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./app/App";
+import { AppStateProvider } from "./app/store";
 import "./shared/styles/reset.css";
 import "./shared/styles/tokens.css";
 import "./main.css";
@@ -21,6 +22,8 @@ if (container === null) {
 
 createRoot(container).render(
   <StrictMode>
-    <App />
+    <AppStateProvider>
+      <App />
+    </AppStateProvider>
   </StrictMode>
 );

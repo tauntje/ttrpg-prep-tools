@@ -1,20 +1,18 @@
-import { useState } from "react";
+import { useCardsStore } from "../../../app/store";
 import { OrientationToggle } from "../../../shared/components/OrientationToggle";
 import { PageViewport } from "../../../shared/components/PageViewport";
 import { Sidebar } from "../../../shared/components/Sidebar";
-import { DEFAULT_ORIENTATION, pageRule } from "../../../shared/model/page";
+import { pageRule } from "../../../shared/model/page";
 import { splitIntoPages } from "../../../shared/model/sheet";
 import type { Card } from "../../../types/card";
-import type { PageOrientation } from "../../../types/page";
 import { CardForm } from "./CardForm";
 import { CardList } from "./CardList";
 import { CardSheet } from "./CardSheet";
 import { cardGrid, createCard } from "../model/card";
 
 export function CardsTab() {
-  const [orientation, setOrientation] = useState<PageOrientation>(DEFAULT_ORIENTATION);
-  const [cards, setCards] = useState<Card[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { orientation, setOrientation, cards, setCards, selectedId, setSelectedId } =
+    useCardsStore();
 
   const selectedCard = cards.find((card) => card.id === selectedId);
   const grid = cardGrid(orientation);

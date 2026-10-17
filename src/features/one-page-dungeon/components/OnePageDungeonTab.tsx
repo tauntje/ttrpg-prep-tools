@@ -1,11 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useDungeonStore } from "../../../app/store";
 import { OrientationToggle } from "../../../shared/components/OrientationToggle";
 import { PageViewport } from "../../../shared/components/PageViewport";
 import { Sidebar } from "../../../shared/components/Sidebar";
-import { DEFAULT_ORIENTATION, pageRule } from "../../../shared/model/page";
+import { pageRule } from "../../../shared/model/page";
 import type { PlacedImage } from "../../../types/image";
-import type { PageOrientation } from "../../../types/page";
-import type { Pin } from "../../../types/pin";
 import type { TextBlock } from "../../../types/textBlock";
 import { ImageImporter } from "./ImageImporter";
 import { PageCanvas } from "./PageCanvas";
@@ -19,11 +18,18 @@ import {
 } from "../model/pin";
 
 export function OnePageDungeonTab() {
-  const [orientation, setOrientation] = useState<PageOrientation>(DEFAULT_ORIENTATION);
-  const [images, setImages] = useState<PlacedImage[]>([]);
-  const [pins, setPins] = useState<Pin[]>([]);
-  const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const {
+    orientation,
+    setOrientation,
+    images,
+    setImages,
+    pins,
+    setPins,
+    textBlocks,
+    setTextBlocks,
+    selectedId,
+    setSelectedId,
+  } = useDungeonStore();
 
   const selectedTextBlock = textBlocks.find((textBlock) => textBlock.id === selectedId);
 

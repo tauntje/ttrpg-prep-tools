@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useTokensStore } from "../../../app/store";
 import { OrientationToggle } from "../../../shared/components/OrientationToggle";
 import { PageViewport } from "../../../shared/components/PageViewport";
 import { Sidebar } from "../../../shared/components/Sidebar";
-import { DEFAULT_ORIENTATION, pageRule } from "../../../shared/model/page";
-import type { PageOrientation } from "../../../types/page";
+import { pageRule } from "../../../shared/model/page";
 import type { Token } from "../../../types/token";
 import { TokenForm } from "./TokenForm";
 import { TokenList } from "./TokenList";
@@ -11,9 +10,8 @@ import { TokenSheet } from "./TokenSheet";
 import { clampImageOffset, TOKEN_SIZES_MM, tokenPages, tokenSizeLabel } from "../model/token";
 
 export function TokensTab() {
-  const [orientation, setOrientation] = useState<PageOrientation>(DEFAULT_ORIENTATION);
-  const [tokens, setTokens] = useState<Token[]>([]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { orientation, setOrientation, tokens, setTokens, selectedId, setSelectedId } =
+    useTokensStore();
 
   const selectedToken = tokens.find((token) => token.id === selectedId);
   const pageCount = Math.max(tokenPages(orientation, tokens).length, 1);
