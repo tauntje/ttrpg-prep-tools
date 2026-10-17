@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
+import Markdown from "react-markdown";
 import type { PlacedImage } from "../../../types/image";
 import type { PageOrientation } from "../../../types/page";
 import type { TextBlock } from "../../../types/textBlock";
@@ -510,7 +511,11 @@ export function PageCanvas({
                 {textBlock.subtitle !== "" && (
                   <p className="text-block-subtitle">{textBlock.subtitle}</p>
                 )}
-                {textBlock.text !== "" && <p>{textBlock.text}</p>}
+                {textBlock.text !== "" && (
+                  <div className="text-block-body">
+                    <Markdown>{textBlock.text}</Markdown>
+                  </div>
+                )}
               </article>
               {selected &&
                 CORNER_HANDLES.map((corner) => (

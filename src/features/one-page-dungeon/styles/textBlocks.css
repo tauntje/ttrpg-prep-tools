@@ -99,9 +99,10 @@
 }
 
 .text-block p.text-block-subtitle {
-  margin: 0 0 1mm;
-  font-size: 3.5mm;
-  font-weight: 600;
+  margin: 0 0 1.5mm;
+  font-size: 12pt;
+  font-weight: 400;
+  color: var(--color-text-subtitle);
 }
 
 .text-block {
@@ -118,12 +119,28 @@
 }
 
 .text-block h2 {
-  margin: 0 0 1mm;
-  font-size: 4mm;
+  margin: 0 0 1.5mm;
+  font-size: 14pt;
+  font-weight: 700;
+  text-decoration: underline;
 }
 
-.text-block p {
+.text-block-body,
+.text-block-body p,
+.text-block-body li {
+  font-size: 12pt;
+  line-height: 1.35;
+}
+
+.text-block-body p {
+  margin: 0 0 1mm;
+}
+
+.text-block-body ul {
+  margin: 0 0 1mm;
+  padding-left: 5mm;
+}
+
+.text-block-body li {
   margin: 0;
-  font-size: 3mm;
-  line-height: 1.4;
 }
