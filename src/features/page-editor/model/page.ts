@@ -1,8 +1,19 @@
-import type { PageSize } from "../../../types/design";
+import type { PageOrientation, PageSize } from "../../../types/page";
 
-export const A4: PageSize = {
+export const A4_PORTRAIT: PageSize = {
   widthMm: 210,
   heightMm: 297,
 };
 
-export const DEFAULT_PAGE: PageSize = A4;
+export const A4_LANDSCAPE: PageSize = {
+  widthMm: 297,
+  heightMm: 210,
+};
+
+export const DEFAULT_ORIENTATION: PageOrientation = "landscape";
+
+export function pageSizeForOrientation(orientation: PageOrientation): PageSize {
+  return orientation === "portrait" ? A4_PORTRAIT : A4_LANDSCAPE;
+}
+
+export const DEFAULT_PAGE: PageSize = pageSizeForOrientation(DEFAULT_ORIENTATION);

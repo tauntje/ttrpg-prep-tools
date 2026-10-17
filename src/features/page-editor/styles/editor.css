@@ -2,12 +2,36 @@
   position: relative;
   background: var(--color-page);
   color: var(--color-ink);
-  box-shadow: 0 2px 12px rgb(0 0 0 / 40%);
+  box-shadow: var(--shadow-page);
   padding: 20mm;
   overflow: hidden;
   zoom: var(--page-zoom);
 }
 
+.page-content {
+  position: relative;
+  height: 100%;
+}
+
 .page-content h2 {
   margin-top: 0;
+}
+
+.orientation-toggle {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.orientation-toggle button {
+  border-radius: var(--radius-sm);
+}
+
+.orientation-toggle [aria-pressed="true"] {
+  background: var(--color-accent);
+  border-color: var(--color-accent-strong);
+  color: #ffffff;
+}
+
+.orientation-toggle [aria-pressed="true"]:hover {
+  background: var(--color-accent-strong);
 }

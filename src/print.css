@@ -20,11 +20,10 @@
     display: block;
     overflow: visible;
     padding: 0;
+    background: none;
   }
 
   .page {
-    width: 210mm;
-    height: 297mm;
     margin: 0;
     box-shadow: none;
     zoom: 1;

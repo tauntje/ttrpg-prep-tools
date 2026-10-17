@@ -1,12 +1,32 @@
 :root {
   --page-zoom: 0.6;
   --font-sans: system-ui, sans-serif;
-  --color-canvas: #6b6b6b;
+
+  /* Warm earth neutrals for a calm screen. */
+  --color-canvas: #f3ecdd;
+  --color-canvas-dot: #ded3bd;
   --color-page: #ffffff;
-  --color-ink: #000000;
-  --color-shell-bg: #1f1f1f;
-  --color-shell-ink: #ffffff;
-  --color-panel: #f2f2f2;
-  --color-panel-border: #d0d0d0;
-  --color-muted: #888888;
+  --color-ink: #2f2a22;
+  --color-text: #3b342a;
+  --color-muted: #8a7f6d;
+
+  /* Shell and panel surfaces. */
+  --color-shell-bg: #3a322a;
+  --color-shell-ink: #f2ebdd;
+  --color-panel: #faf5ea;
+  --color-panel-border: #e6dcc8;
+
+  /* Terracotta accent. */
+  --color-accent: #b26a4c;
+  --color-accent-strong: #96563c;
+  --color-accent-soft: #f0e0d5;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --shadow-page: 0 1px 2px rgb(47 42 34 / 8%), 0 12px 32px rgb(47 42 34 / 16%);
+  --shadow-soft: 0 1px 2px rgb(47 42 34 / 6%);
+
+  --transition-fast: 120ms ease;
 }
