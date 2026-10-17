@@ -4,7 +4,8 @@
 
 - Use React with TypeScript.
 - Use Vite to run and build the app.
-- Do not add a server or a database.
+- Do not add a server.
+- Use the local SQLite database in the Tauri app to save cards and tokens.
 
 ## Structure
 
@@ -42,8 +43,10 @@
 
 ## Commands
 
-- `npm run dev` — start the app.
-- `npm run build` — check the types and build the app.
+- `npm run dev` — start the app in the browser.
+- `npm run build` — check the types and build the web app.
+- `npm run tauri:dev` — start the Tauri app. The SQLite database is active.
+- `npm run tauri:build` — build the Tauri app.
 
 ## Writing
 
