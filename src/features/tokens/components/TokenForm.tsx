@@ -9,14 +9,17 @@ import {
 
 interface TokenFormProps {
   token: Token;
+  isUnsaved: boolean;
   onChange: (patch: Partial<Token>) => void;
+  onSave: () => void;
   onDelete: () => void;
 }
 
 /**
  * Edit the selected token. Each change shows on the sheet at once.
+ * The Save action writes the token to the library.
  */
-export function TokenForm({ token, onChange, onDelete }: TokenFormProps) {
+export function TokenForm({ token, isUnsaved, onChange, onSave, onDelete }: TokenFormProps) {
   return (
     <div className="token-form">
       <h3>Token</h3>
@@ -59,9 +62,20 @@ export function TokenForm({ token, onChange, onDelete }: TokenFormProps) {
           onChange={(event) => onChange({ imageScale: Number(event.target.value) })}
         />
       </label>
-      <button type="button" className="token-delete" onClick={onDelete}>
-        Remove token
-      </button>
+      <p className="token-save-state">{isUnsaved ? "Not saved" : "Saved"}</p>
+      <div className="token-form-actions">
+        <button
+          type="button"
+          className="token-save"
+          disabled={!isUnsaved}
+          onClick={onSave}
+        >
+          Save
+        </button>
+        <button type="button" className="token-delete" onClick={onDelete}>
+          Remove token
+        </button>
+      </div>
     </div>
   );
 }
