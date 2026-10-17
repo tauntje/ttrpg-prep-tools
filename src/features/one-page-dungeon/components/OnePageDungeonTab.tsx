@@ -4,15 +4,23 @@ import { Sidebar } from "../../../shared/components/Sidebar";
 import { DEFAULT_ORIENTATION, pageRule } from "../../../shared/model/page";
 import type { PlacedImage } from "../../../types/image";
 import type { PageOrientation } from "../../../types/page";
+import type { Pin } from "../../../types/pin";
 import type { TextBlock } from "../../../types/textBlock";
 import { ImageImporter } from "./ImageImporter";
 import { PageCanvas } from "./PageCanvas";
 import { TextBlockForm } from "./TextBlockForm";
 import { TextBlockInserter } from "./TextBlockInserter";
+import {
+  createPin,
+  nextPinNumber,
+  renumberPins,
+  type PinFraction,
+} from "../model/pin";
 
 export function OnePageDungeonTab() {
   const [orientation, setOrientation] = useState<PageOrientation>(DEFAULT_ORIENTATION);
   const [images, setImages] = useState<PlacedImage[]>([]);
+  const [pins, setPins] = useState<Pin[]>([]);
   const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -44,6 +52,7 @@ export function OnePageDungeonTab() {
       event.preventDefault();
       // An id belongs to one list only.
       handleDeleteImage(selectedItemId);
+      handleDeletePin(selectedItemId);
       handleDeleteTextBlock(selectedItemId);
       setSelectedId(null);
     }
@@ -60,6 +69,17 @@ export function OnePageDungeonTab() {
     setImages((current) => [...current, image]);
   }
 
+  function handleAddPin(imageId: string, fraction: PinFraction) {
+    setPins((current) => [
+      ...current,
+      createPin(imageId, fraction, nextPinNumber(current)),
+    ]);
+  }
+
+  function handleDeletePin(id: string) {
+    setPins((current) => renumberPins(current.filter((pin) => pin.id !== id)));
+  }
+
   function handleUpdateImage(id: string, patch: Partial<PlacedImage>) {
     setImages((current) =>
       current.map((image) => (image.id === id ? { ...image, ...patch } : image))
@@ -68,6 +88,7 @@ export function OnePageDungeonTab() {
 
   function handleDeleteImage(id: string) {
     setImages((current) => current.filter((image) => image.id !== id));
+    setPins((current) => renumberPins(current.filter((pin) => pin.imageId !== id)));
   }
 
   function handleUpdateTextBlock(id: string, patch: Partial<TextBlock>) {
@@ -108,11 +129,14 @@ export function OnePageDungeonTab() {
           <PageCanvas
             orientation={orientation}
             images={images}
+            pins={pins}
             textBlocks={textBlocks}
             selectedId={selectedId}
             onSelect={handleSelect}
             onUpdateImage={handleUpdateImage}
             onUpdateTextBlock={handleUpdateTextBlock}
+            onAddPin={handleAddPin}
+            onDeletePin={handleDeletePin}
           />
         </main>
       </div>

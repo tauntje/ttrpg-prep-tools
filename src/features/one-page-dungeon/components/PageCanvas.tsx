@@ -1,8 +1,13 @@
 import { useRef } from "react";
-import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
+import type {
+  KeyboardEvent as ReactKeyboardEvent,
+  MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
+} from "react";
 import Markdown from "react-markdown";
 import type { PlacedImage } from "../../../types/image";
 import type { PageOrientation } from "../../../types/page";
+import type { Pin } from "../../../types/pin";
 import type { TextBlock } from "../../../types/textBlock";
 import {
   clampMm,
@@ -25,15 +30,20 @@ import {
   type ResizeSession,
 } from "../../../shared/model/resize";
 import { pageSizeForOrientation } from "../../../shared/model/page";
+import { pinFractionAt, pinPositionMm, type PinFraction } from "../model/pin";
+import { TEXT_BLOCK_THEMES } from "../model/textBlockTheme";
 
 interface PageCanvasProps {
   orientation: PageOrientation;
   images: PlacedImage[];
+  pins: Pin[];
   textBlocks: TextBlock[];
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onUpdateImage: (id: string, patch: Partial<PlacedImage>) => void;
   onUpdateTextBlock: (id: string, patch: Partial<TextBlock>) => void;
+  onAddPin: (imageId: string, fraction: PinFraction) => void;
+  onDeletePin: (id: string) => void;
 }
 
 const NUDGE_STEP_MM = 1;
@@ -53,11 +63,14 @@ interface MoveGesture {
 export function PageCanvas({
   orientation,
   images,
+  pins,
   textBlocks,
   selectedId,
   onSelect,
   onUpdateImage,
   onUpdateTextBlock,
+  onAddPin,
+  onDeletePin,
 }: PageCanvasProps) {
   const page = pageSizeForOrientation(orientation);
   const areaRef = useRef<HTMLDivElement>(null);
@@ -141,6 +154,23 @@ export function PageCanvas({
     if (!gesture.moved) {
       onSelect(image.id);
     }
+  }
+
+  function handleFrameContextMenu(
+    event: ReactMouseEvent<HTMLDivElement>,
+    image: PlacedImage
+  ) {
+    event.preventDefault();
+
+    const frameRect = event.currentTarget.getBoundingClientRect();
+    if (frameRect.width <= 0) {
+      return;
+    }
+
+    const mmPerPx = image.widthMm / frameRect.width;
+    const offsetXMm = (event.clientX - frameRect.left) * mmPerPx;
+    const offsetYMm = (event.clientY - frameRect.top) * mmPerPx;
+    onAddPin(image.id, pinFractionAt(image, offsetXMm, offsetYMm));
   }
 
   function frameRectFor(handle: HTMLElement) {
@@ -436,6 +466,7 @@ export function PageCanvas({
               onPointerMove={handleFramePointerMove}
               onPointerUp={(event) => handleFramePointerUp(event, image)}
               onPointerCancel={(event) => handleFramePointerUp(event, image)}
+              onContextMenu={(event) => handleFrameContextMenu(event, image)}
               onKeyDown={(event) => handleKeyDown(event, image)}
               style={{
                 left: `${image.xMm}mm`,
@@ -488,6 +519,7 @@ export function PageCanvas({
         })}
         {textBlocks.map((textBlock) => {
           const selected = textBlock.id === selectedId;
+          const theme = TEXT_BLOCK_THEMES[textBlock.theme];
 
           return (
             <div
@@ -506,10 +538,12 @@ export function PageCanvas({
                 height: `${textBlock.heightMm}mm`,
               }}
             >
-              <article className="text-block" style={{ borderColor: textBlock.colour }}>
-                <h2 style={{ color: textBlock.colour }}>{textBlock.title}</h2>
+              <article className="text-block" style={{ borderColor: theme.titleColour }}>
+                <h2 style={{ color: theme.titleColour }}>{textBlock.title}</h2>
                 {textBlock.subtitle !== "" && (
-                  <p className="text-block-subtitle">{textBlock.subtitle}</p>
+                  <p className="text-block-subtitle" style={{ color: theme.subtitleColour }}>
+                    {textBlock.subtitle}
+                  </p>
                 )}
                 {textBlock.text !== "" && (
                   <div className="text-block-body">
@@ -532,6 +566,37 @@ export function PageCanvas({
                   />
                 ))}
             </div>
+          );
+        })}
+        {pins.map((pin) => {
+          const image = images.find((item) => item.id === pin.imageId);
+          if (image === undefined) {
+            return null;
+          }
+
+          const position = pinPositionMm(pin, image);
+          const selected = pin.id === selectedId;
+
+          return (
+            <button
+              key={pin.id}
+              type="button"
+              className={`pin-marker${selected ? " is-selected" : ""}`}
+              style={{ left: `${position.xMm}mm`, top: `${position.yMm}mm` }}
+              aria-label={`Pin ${pin.number}`}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                onSelect(pin.id);
+              }}
+              onContextMenu={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onDeletePin(pin.id);
+              }}
+            >
+              {pin.number}
+            </button>
           );
         })}
       </div>

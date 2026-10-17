@@ -1,4 +1,4 @@
-import type { TextBlock, TextBlockType } from "../../../types/textBlock";
+import type { TextBlock, TextBlockThemeId, TextBlockType } from "../../../types/textBlock";
 
 const DEFAULT_TITLE: Record<TextBlockType, string> = {
   information: "Information",
@@ -6,7 +6,7 @@ const DEFAULT_TITLE: Record<TextBlockType, string> = {
   legend: "Legend",
 };
 
-const DEFAULT_COLOUR = "#b26a4c";
+const DEFAULT_THEME: TextBlockThemeId = "terracotta";
 const DEFAULT_WIDTH_MM = 70;
 const DEFAULT_HEIGHT_MM = 30;
 const OFFSET_STEP_MM = 8;
@@ -20,7 +20,7 @@ export function createTextBlock(type: TextBlockType, index: number): TextBlock {
     type,
     title: DEFAULT_TITLE[type],
     subtitle: "",
-    colour: DEFAULT_COLOUR,
+    theme: DEFAULT_THEME,
     bullets: [],
     text: "",
     xMm: 20 + offset,

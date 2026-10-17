@@ -8,6 +8,7 @@ import "./shared/styles/page.css";
 import "./features/one-page-dungeon/styles/editor.css";
 import "./features/one-page-dungeon/styles/images.css";
 import "./features/one-page-dungeon/styles/textBlocks.css";
+import "./features/one-page-dungeon/styles/pins.css";
 import "./features/cards/styles/cards.css";
 import "./features/tokens/styles/tokens.css";
 import "./shared/styles/print.css";

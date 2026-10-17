@@ -80,7 +80,8 @@
 }
 
 .text-block-field input,
-.text-block-field textarea {
+.text-block-field textarea,
+.text-block-field select {
   box-sizing: border-box;
   width: 100%;
   padding: 6px 8px;
@@ -93,7 +94,8 @@
 }
 
 .text-block-field input:focus,
-.text-block-field textarea:focus {
+.text-block-field textarea:focus,
+.text-block-field select:focus {
   border-color: var(--color-accent);
   outline: none;
 }
@@ -102,7 +104,6 @@
   margin: 2pt 0 0;
   font-size: 12pt;
   font-weight: 400;
-  color: var(--color-text-subtitle);
 }
 
 .text-block {

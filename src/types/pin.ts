@@ -1,6 +1,7 @@
 export interface Pin {
   id: string;
+  imageId: string;
   number: number;
-  xMm: number;
-  yMm: number;
+  xFraction: number;
+  yFraction: number;
 }
