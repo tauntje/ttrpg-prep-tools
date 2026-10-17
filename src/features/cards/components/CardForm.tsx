@@ -1,3 +1,4 @@
+import { TextControl } from "../../../shared/components/TextControl";
 import type { Card } from "../../../types/card";
 
 interface CardFormProps {
@@ -15,26 +16,22 @@ export function CardForm({ card, onChange, onDelete }: CardFormProps) {
       <h3>Card</h3>
       <label className="card-field">
         Title
-        <input
-          type="text"
-          value={card.title}
-          onChange={(event) => onChange({ title: event.target.value })}
-        />
+        <TextControl value={card.title} onChange={(title) => onChange({ title })} />
       </label>
       <label className="card-field">
         Subtitle
-        <input
-          type="text"
+        <TextControl
           value={card.subtitle}
-          onChange={(event) => onChange({ subtitle: event.target.value })}
+          onChange={(subtitle) => onChange({ subtitle })}
         />
       </label>
       <label className="card-field">
         Text
-        <textarea
+        <TextControl
+          multiline
           rows={5}
           value={card.text}
-          onChange={(event) => onChange({ text: event.target.value })}
+          onChange={(text) => onChange({ text })}
         />
       </label>
       <button type="button" className="card-delete" onClick={onDelete}>
