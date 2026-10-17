@@ -4,6 +4,7 @@ import { App } from "./app/App";
 import "./main.css";
 import "./features/page-editor/styles/editor.css";
 import "./features/images/styles/images.css";
+import "./features/text-blocks/styles/textBlocks.css";
 import "./print.css";
 
 const container = document.getElementById("root");

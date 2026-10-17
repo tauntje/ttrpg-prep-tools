@@ -3,7 +3,6 @@
   background: var(--color-page);
   color: var(--color-ink);
   box-shadow: var(--shadow-page);
-  padding: 20mm;
   overflow: hidden;
   zoom: var(--page-zoom);
 }
@@ -11,6 +10,7 @@
 .page-content {
   position: relative;
   height: 100%;
+  padding: 20mm;
 }
 
 .page-content h2 {

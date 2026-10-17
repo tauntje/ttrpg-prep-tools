@@ -1,0 +1,129 @@
+.text-block-inserter {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.text-block-inserter h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.text-block-inserter button {
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--color-text);
+  background: var(--color-page);
+  border: 1px solid var(--color-panel-border);
+  border-radius: var(--radius-sm);
+}
+
+.text-block-inserter button:hover {
+  color: var(--color-accent-strong);
+  border-color: var(--color-accent);
+}
+
+.text-block-frame {
+  position: absolute;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.text-block-frame:active {
+  cursor: grabbing;
+}
+
+.text-block-frame.is-selected {
+  z-index: 10;
+}
+
+.text-block-frame:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.text-block-frame.is-selected::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  pointer-events: none;
+}
+
+.text-block-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.text-block-form h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.text-block-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--color-text);
+}
+
+.text-block-field input,
+.text-block-field textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 6px 8px;
+  font: inherit;
+  color: var(--color-text);
+  background: var(--color-page);
+  border: 1px solid var(--color-panel-border);
+  border-radius: var(--radius-sm);
+  resize: vertical;
+}
+
+.text-block-field input:focus,
+.text-block-field textarea:focus {
+  border-color: var(--color-accent);
+  outline: none;
+}
+
+.text-block p.text-block-subtitle {
+  margin: 0 0 1mm;
+  font-size: 3.5mm;
+  font-weight: 600;
+}
+
+.text-block {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 3mm;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  background: rgb(255 255 255 / 88%);
+  border: 0.4mm solid var(--color-accent);
+  border-radius: 1mm;
+}
+
+.text-block h2 {
+  margin: 0 0 1mm;
+  font-size: 4mm;
+}
+
+.text-block p {
+  margin: 0;
+  font-size: 3mm;
+  line-height: 1.4;
+}

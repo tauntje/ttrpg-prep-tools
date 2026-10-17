@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import type { PlacedImage } from "../../../types/image";
-import { createPlacedImage, isAcceptedImage, readImageFile } from "../model/image";
+import { createPlacedImage, isAcceptedImage, readImageFile, readImageSize } from "../model/image";
 
 interface ImageImporterProps {
   imageCount: number;
@@ -27,7 +27,8 @@ export function ImageImporter({ imageCount, onPlace }: ImageImporterProps) {
 
     try {
       const src = await readImageFile(file);
-      onPlace(createPlacedImage(src, file.name, imageCount));
+      const size = await readImageSize(src);
+      onPlace(createPlacedImage(src, file.name, imageCount, size.width, size.height));
       setError(null);
     } catch {
       setError("The app cannot read this file.");

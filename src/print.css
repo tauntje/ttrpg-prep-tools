@@ -29,4 +29,12 @@
     zoom: 1;
     break-after: page;
   }
+
+  .image-frame.is-selected::after {
+    outline: none;
+  }
+
+  .text-block-frame.is-selected::after {
+    outline: none;
+  }
 }

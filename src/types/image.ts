@@ -5,4 +5,9 @@ export interface PlacedImage {
   xMm: number;
   yMm: number;
   widthMm: number;
+  heightMm: number;
+  imageXMm: number;
+  imageYMm: number;
+  imageWidthMm: number;
+  aspectRatio: number;
 }
