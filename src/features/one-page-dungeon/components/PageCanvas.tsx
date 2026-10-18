@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type {
   KeyboardEvent as ReactKeyboardEvent,
   MouseEvent as ReactMouseEvent,
@@ -20,11 +20,6 @@ import {
 } from "../../../shared/model/drag";
 import { cropTo, startCrop, type CropEdge, type CropSession } from "../model/crop";
 import {
-  frameResizeTo,
-  startFrameResize,
-  type FrameResizeSession,
-} from "../model/frame";
-import {
   resizeTo,
   startResize,
   type ResizeCorner,
@@ -33,6 +28,8 @@ import {
 import { pageSizeForOrientation } from "../../../shared/model/page";
 import { moveFraction, pinFractionAt, pinPositionMm, type PinFraction } from "../model/pin";
 import { TEXT_BLOCK_THEMES } from "../model/textBlockTheme";
+import { textBlockFlow } from "../model/textBlockFlow";
+import { TextBlockEditor, type TextBlockField } from "./TextBlockEditor";
 
 interface PageCanvasProps {
   orientation: PageOrientation;
@@ -53,6 +50,20 @@ const NUDGE_STEP_FAST_MM = 10;
 const DRAG_THRESHOLD_PX = 3;
 const CORNER_HANDLES: ResizeCorner[] = ["nw", "ne", "sw", "se"];
 const EDGE_HANDLES: CropEdge[] = ["n", "e", "s", "w"];
+
+/** Find the text block field below the pointer. */
+function textBlockFieldFor(target: EventTarget | null): TextBlockField {
+  if (!(target instanceof HTMLElement)) {
+    return "title";
+  }
+  if (target.closest(".text-block-body") !== null) {
+    return "body";
+  }
+  if (target.closest(".text-block-subtitle") !== null) {
+    return "subtitle";
+  }
+  return "title";
+}
 
 interface MoveGesture {
   session: DragSession;
@@ -89,6 +100,7 @@ export function PageCanvas({
   onUpdatePin,
 }: PageCanvasProps) {
   const page = pageSizeForOrientation(orientation);
+  const flow = textBlockFlow(images, page);
   const pageRef = useRef<HTMLElement>(null);
   const areaRef = useRef<HTMLDivElement>(null);
   const pointerScaleRef = useRef(1);
@@ -96,7 +108,7 @@ export function PageCanvas({
   const pinMoveRef = useRef<PinMoveGesture | null>(null);
   const resizeRef = useRef<ResizeSession | null>(null);
   const cropRef = useRef<CropSession | null>(null);
-  const textResizeRef = useRef<FrameResizeSession | null>(null);
+  const [editField, setEditField] = useState<TextBlockField>("title");
 
   function pageZoom(): number {
     const pageElement = pageRef.current;
@@ -170,9 +182,15 @@ export function PageCanvas({
   }
 
   function handleBackgroundPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
-    if (event.target === event.currentTarget) {
-      onSelect(null);
+    const target = event.target;
+    if (
+      target instanceof HTMLElement &&
+      target.closest(".text-block-frame, .image-frame, .pin-marker") !== null
+    ) {
+      return;
     }
+
+    onSelect(null);
   }
 
   function handleFramePointerDown(
@@ -400,129 +418,12 @@ export function PageCanvas({
     event: ReactPointerEvent<HTMLDivElement>,
     textBlock: TextBlock
   ) {
-    if (event.button !== 0) {
+    if (selectedId === textBlock.id) {
       return;
     }
 
-    const bounds = boundsFor(textBlock.widthMm, event.currentTarget);
-    if (bounds === null) {
-      return;
-    }
-
-    rememberPointerScale();
-    moveRef.current = {
-      session: startDrag(textBlock, scaledPointer(event), bounds),
-      pointerId: event.pointerId,
-      element: event.currentTarget,
-      moved: false,
-      onMove: (id, position) => onUpdateTextBlock(id, position),
-    };
-    event.currentTarget.setPointerCapture(event.pointerId);
-  }
-
-  function handleTextBlockPointerUp(
-    event: ReactPointerEvent<HTMLDivElement>,
-    textBlock: TextBlock
-  ) {
-    const gesture = moveRef.current;
-    if (gesture === null || gesture.pointerId !== event.pointerId) {
-      return;
-    }
-
-    moveRef.current = null;
-    if (gesture.element.hasPointerCapture(event.pointerId)) {
-      gesture.element.releasePointerCapture(event.pointerId);
-    }
-
-    if (!gesture.moved) {
-      onSelect(textBlock.id);
-    }
-  }
-
-  function handleTextBlockResizePointerDown(
-    event: ReactPointerEvent<HTMLSpanElement>,
-    textBlock: TextBlock,
-    corner: ResizeCorner
-  ) {
-    if (event.button !== 0) {
-      return;
-    }
-
-    event.stopPropagation();
-
-    const frameRect = frameRectFor(event.currentTarget);
-    const areaElement = areaRef.current;
-    if (frameRect === null || areaElement === null) {
-      return;
-    }
-
-    rememberPointerScale();
-    const session = startFrameResize(
-      textBlock,
-      corner,
-      frameRect,
-      areaElement.getBoundingClientRect(),
-      scaledPointer(event)
-    );
-    if (session === null) {
-      return;
-    }
-
-    textResizeRef.current = session;
-    event.currentTarget.setPointerCapture(event.pointerId);
-    event.preventDefault();
-  }
-
-  function handleTextBlockResizePointerMove(event: ReactPointerEvent<HTMLSpanElement>) {
-    const session = textResizeRef.current;
-    if (session === null) {
-      return;
-    }
-
-    onUpdateTextBlock(session.id, frameResizeTo(session, scaledPointer(event)));
-  }
-
-  function handleTextBlockResizePointerUp(event: ReactPointerEvent<HTMLSpanElement>) {
-    if (textResizeRef.current === null) {
-      return;
-    }
-
-    textResizeRef.current = null;
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-  }
-
-  function handleTextBlockKeyDown(
-    event: ReactKeyboardEvent<HTMLDivElement>,
-    textBlock: TextBlock
-  ) {
-    const bounds = boundsFor(textBlock.widthMm, event.currentTarget);
-    if (bounds === null) {
-      return;
-    }
-
-    const stepMm = event.shiftKey ? NUDGE_STEP_FAST_MM : NUDGE_STEP_MM;
-    let deltaXMm = 0;
-    let deltaYMm = 0;
-
-    if (event.key === "ArrowLeft") {
-      deltaXMm = -stepMm;
-    } else if (event.key === "ArrowRight") {
-      deltaXMm = stepMm;
-    } else if (event.key === "ArrowUp") {
-      deltaYMm = -stepMm;
-    } else if (event.key === "ArrowDown") {
-      deltaYMm = stepMm;
-    } else {
-      return;
-    }
-
-    event.preventDefault();
-    onUpdateTextBlock(textBlock.id, {
-      xMm: clampMm(textBlock.xMm + deltaXMm, bounds.maxXMm),
-      yMm: clampMm(textBlock.yMm + deltaYMm, bounds.maxYMm),
-    });
+    setEditField(textBlockFieldFor(event.target));
+    onSelect(textBlock.id);
   }
 
   function pinMmPerPx(): number | null {
@@ -717,57 +618,62 @@ export function PageCanvas({
             </div>
           );
         })}
-        {textBlocks.map((textBlock) => {
-          const selected = textBlock.id === selectedId;
-          const theme = TEXT_BLOCK_THEMES[textBlock.theme];
-
-          return (
+        <div
+          className="text-block-flow"
+          style={{
+            left: `${flow.xMm}mm`,
+            top: `${flow.yMm}mm`,
+            width: `${flow.widthMm}mm`,
+            height: `${flow.heightMm}mm`,
+            columnCount: flow.columnCount,
+          }}
+        >
+          {flow.topGapMm > 0 && (
             <div
-              key={textBlock.id}
-              className={`text-block-frame${selected ? " is-selected" : ""}`}
-              tabIndex={0}
-              onPointerDown={(event) => handleTextBlockPointerDown(event, textBlock)}
-              onPointerMove={handleFramePointerMove}
-              onPointerUp={(event) => handleTextBlockPointerUp(event, textBlock)}
-              onPointerCancel={(event) => handleTextBlockPointerUp(event, textBlock)}
-              onKeyDown={(event) => handleTextBlockKeyDown(event, textBlock)}
-              style={{
-                left: `${textBlock.xMm}mm`,
-                top: `${textBlock.yMm}mm`,
-                width: `${textBlock.widthMm}mm`,
-                height: `${textBlock.heightMm}mm`,
-              }}
-            >
-              <article className="text-block" style={{ borderColor: theme.titleColour }}>
-                <h2 style={{ color: theme.titleColour }}>{textBlock.title}</h2>
-                {textBlock.subtitle !== "" && (
-                  <p className="text-block-subtitle" style={{ color: theme.subtitleColour }}>
-                    {textBlock.subtitle}
-                  </p>
-                )}
-                {textBlock.text !== "" && (
-                  <div className="text-block-body">
-                    <Markdown>{textBlock.text}</Markdown>
-                  </div>
-                )}
-              </article>
-              {selected &&
-                CORNER_HANDLES.map((corner) => (
-                  <span
-                    key={corner}
-                    className={`image-handle image-handle-${corner} screen-only`}
-                    aria-hidden="true"
-                    onPointerDown={(event) =>
-                      handleTextBlockResizePointerDown(event, textBlock, corner)
-                    }
-                    onPointerMove={handleTextBlockResizePointerMove}
-                    onPointerUp={handleTextBlockResizePointerUp}
-                    onPointerCancel={handleTextBlockResizePointerUp}
+              className="text-block-flow-gap"
+              style={{ height: `${flow.topGapMm}mm` }}
+              aria-hidden="true"
+            />
+          )}
+          {textBlocks.map((textBlock) => {
+            const selected = textBlock.id === selectedId;
+            const theme = TEXT_BLOCK_THEMES[textBlock.theme];
+
+            return (
+              <div
+                key={textBlock.id}
+                className={`text-block-frame${selected ? " is-selected" : ""}`}
+                onPointerDown={(event) => handleTextBlockPointerDown(event, textBlock)}
+              >
+                <article
+                  className="text-block text-block-view"
+                  style={{ borderColor: theme.titleColour }}
+                >
+                  <h2 className="text-block-title" style={{ color: theme.titleColour }}>
+                    {textBlock.title}
+                  </h2>
+                  {textBlock.subtitle !== "" && (
+                    <p className="text-block-subtitle" style={{ color: theme.subtitleColour }}>
+                      {textBlock.subtitle}
+                    </p>
+                  )}
+                  {textBlock.text !== "" && (
+                    <div className="text-block-body">
+                      <Markdown>{textBlock.text}</Markdown>
+                    </div>
+                  )}
+                </article>
+                {selected && (
+                  <TextBlockEditor
+                    textBlock={textBlock}
+                    field={editField}
+                    onChange={(patch) => onUpdateTextBlock(textBlock.id, patch)}
                   />
-                ))}
-            </div>
-          );
-        })}
+                )}
+              </div>
+            );
+          })}
+        </div>
         {pins.map((pin) => {
           const image = images.find((item) => item.id === pin.imageId);
           if (image === undefined) {

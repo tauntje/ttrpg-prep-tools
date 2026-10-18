@@ -3,13 +3,12 @@ import { useDungeonStore } from "../../../app/store";
 import { OrientationToggle } from "../../../shared/components/OrientationToggle";
 import { PageViewport } from "../../../shared/components/PageViewport";
 import { Sidebar } from "../../../shared/components/Sidebar";
-import { pageRule, pageSizeForOrientation } from "../../../shared/model/page";
+import { pageRule } from "../../../shared/model/page";
 import type { PlacedImage } from "../../../types/image";
 import type { Pin } from "../../../types/pin";
 import type { TextBlock } from "../../../types/textBlock";
 import { ImageImporter } from "./ImageImporter";
 import { PageCanvas } from "./PageCanvas";
-import { TextBlockForm } from "./TextBlockForm";
 import { TextBlockInserter } from "./TextBlockInserter";
 import {
   createPin,
@@ -17,7 +16,7 @@ import {
   renumberPins,
   type PinFraction,
 } from "../model/pin";
-import { createLegendTextBlock, syncLegendTitles } from "../model/textBlock";
+import { createTextBlock, syncLegendTitles } from "../model/textBlock";
 
 export function OnePageDungeonTab() {
   const {
@@ -32,8 +31,6 @@ export function OnePageDungeonTab() {
     selectedId,
     setSelectedId,
   } = useDungeonStore();
-
-  const selectedTextBlock = textBlocks.find((textBlock) => textBlock.id === selectedId);
 
   useEffect(() => {
     const id: string | null = selectedId;
@@ -53,7 +50,9 @@ export function OnePageDungeonTab() {
         target !== null &&
         (target.isContentEditable ||
           target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA")
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.tagName === "BUTTON")
       ) {
         return;
       }
@@ -79,21 +78,13 @@ export function OnePageDungeonTab() {
   }
 
   function handleAddPin(imageId: string, fraction: PinFraction) {
-    const image = images.find((item) => item.id === imageId);
-    if (image === undefined) {
-      return;
-    }
-
-    const page = pageSizeForOrientation(orientation);
     const number = nextPinNumber(pins);
     const pin = createPin(imageId, fraction, number);
-    const legend = createLegendTextBlock(
-      pin.id,
-      number,
-      textBlocks.length,
-      image,
-      page
-    );
+    const legend = {
+      ...createTextBlock("legend"),
+      pinId: pin.id,
+      title: String(number),
+    };
     setPins((current) => [...current, pin]);
     setTextBlocks((current) => [...current, legend]);
   }
@@ -155,16 +146,7 @@ export function OnePageDungeonTab() {
         <Sidebar>
           <OrientationToggle orientation={orientation} onChange={setOrientation} />
           <ImageImporter imageCount={images.length} onPlace={handlePlaceImage} />
-          <TextBlockInserter
-            textBlockCount={textBlocks.length}
-            onInsert={handleInsertTextBlock}
-          />
-          {selectedTextBlock !== undefined && (
-            <TextBlockForm
-              textBlock={selectedTextBlock}
-              onChange={(patch) => handleUpdateTextBlock(selectedTextBlock.id, patch)}
-            />
-          )}
+          <TextBlockInserter onInsert={handleInsertTextBlock} />
         </Sidebar>
         <PageViewport>
           <PageCanvas
