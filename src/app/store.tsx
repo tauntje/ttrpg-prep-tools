@@ -7,6 +7,7 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
+import { primaryId } from "../shared/model/multiSelection";
 import { DEFAULT_ORIENTATION } from "../shared/model/page";
 import type { Card } from "../types/card";
 import type { PlacedImage } from "../types/image";
@@ -16,7 +17,10 @@ import type { TextBlock } from "../types/textBlock";
 import type { Token } from "../types/token";
 
 type OrientationSetter = Dispatch<SetStateAction<PageOrientation>>;
-type SelectionSetter = Dispatch<SetStateAction<string | null>>;
+type SelectionIdsSetter = Dispatch<SetStateAction<string[]>>;
+
+/** Replace the selection with one item, or clear it. */
+type SelectionSetter = (id: string | null) => void;
 
 interface DungeonStore {
   orientation: PageOrientation;
@@ -27,6 +31,8 @@ interface DungeonStore {
   setPins: Dispatch<SetStateAction<Pin[]>>;
   textBlocks: TextBlock[];
   setTextBlocks: Dispatch<SetStateAction<TextBlock[]>>;
+  selectedIds: string[];
+  setSelectedIds: SelectionIdsSetter;
   selectedId: string | null;
   setSelectedId: SelectionSetter;
 }
@@ -36,6 +42,8 @@ interface CardsStore {
   setOrientation: OrientationSetter;
   cards: Card[];
   setCards: Dispatch<SetStateAction<Card[]>>;
+  selectedIds: string[];
+  setSelectedIds: SelectionIdsSetter;
   selectedId: string | null;
   setSelectedId: SelectionSetter;
 }
@@ -45,6 +53,8 @@ interface TokensStore {
   setOrientation: OrientationSetter;
   tokens: Token[];
   setTokens: Dispatch<SetStateAction<Token[]>>;
+  selectedIds: string[];
+  setSelectedIds: SelectionIdsSetter;
   selectedId: string | null;
   setSelectedId: SelectionSetter;
 }
@@ -67,17 +77,17 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
   const [images, setImages] = useState<PlacedImage[]>([]);
   const [pins, setPins] = useState<Pin[]>([]);
   const [textBlocks, setTextBlocks] = useState<TextBlock[]>([]);
-  const [dungeonSelectedId, setDungeonSelectedId] = useState<string | null>(null);
+  const [dungeonSelectedIds, setDungeonSelectedIds] = useState<string[]>([]);
 
   const [cardsOrientation, setCardsOrientation] =
     useState<PageOrientation>(DEFAULT_ORIENTATION);
   const [cards, setCards] = useState<Card[]>([]);
-  const [cardsSelectedId, setCardsSelectedId] = useState<string | null>(null);
+  const [cardsSelectedIds, setCardsSelectedIds] = useState<string[]>([]);
 
   const [tokensOrientation, setTokensOrientation] =
     useState<PageOrientation>(DEFAULT_ORIENTATION);
   const [tokens, setTokens] = useState<Token[]>([]);
-  const [tokensSelectedId, setTokensSelectedId] = useState<string | null>(null);
+  const [tokensSelectedIds, setTokensSelectedIds] = useState<string[]>([]);
 
   const dungeon = useMemo<DungeonStore>(
     () => ({
@@ -89,10 +99,12 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       setPins,
       textBlocks,
       setTextBlocks,
-      selectedId: dungeonSelectedId,
-      setSelectedId: setDungeonSelectedId,
+      selectedIds: dungeonSelectedIds,
+      setSelectedIds: setDungeonSelectedIds,
+      selectedId: primaryId(dungeonSelectedIds),
+      setSelectedId: (id) => setDungeonSelectedIds(id === null ? [] : [id]),
     }),
-    [dungeonOrientation, images, pins, textBlocks, dungeonSelectedId]
+    [dungeonOrientation, images, pins, textBlocks, dungeonSelectedIds]
   );
 
   const cardsStore = useMemo<CardsStore>(
@@ -101,10 +113,12 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       setOrientation: setCardsOrientation,
       cards,
       setCards,
-      selectedId: cardsSelectedId,
-      setSelectedId: setCardsSelectedId,
+      selectedIds: cardsSelectedIds,
+      setSelectedIds: setCardsSelectedIds,
+      selectedId: primaryId(cardsSelectedIds),
+      setSelectedId: (id) => setCardsSelectedIds(id === null ? [] : [id]),
     }),
-    [cardsOrientation, cards, cardsSelectedId]
+    [cardsOrientation, cards, cardsSelectedIds]
   );
 
   const tokensStore = useMemo<TokensStore>(
@@ -113,10 +127,12 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       setOrientation: setTokensOrientation,
       tokens,
       setTokens,
-      selectedId: tokensSelectedId,
-      setSelectedId: setTokensSelectedId,
+      selectedIds: tokensSelectedIds,
+      setSelectedIds: setTokensSelectedIds,
+      selectedId: primaryId(tokensSelectedIds),
+      setSelectedId: (id) => setTokensSelectedIds(id === null ? [] : [id]),
     }),
-    [tokensOrientation, tokens, tokensSelectedId]
+    [tokensOrientation, tokens, tokensSelectedIds]
   );
 
   return (

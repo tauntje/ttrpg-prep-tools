@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./app/App";
 import { AppStateProvider } from "./app/store";
+import { stopNativeContextMenu } from "./shared/model/contextMenu";
 import "./shared/styles/reset.css";
 import "./shared/styles/tokens.css";
 import "./main.css";
@@ -19,6 +20,8 @@ const container = document.getElementById("root");
 if (container === null) {
   throw new Error("Root element not found");
 }
+
+stopNativeContextMenu();
 
 createRoot(container).render(
   <StrictMode>

@@ -5,7 +5,7 @@
   "identifier": "com.opdprep.app",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://localhost:5173",
+    "devUrl": "http://localhost:4200",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
   },
@@ -25,7 +25,9 @@
   },
   "plugins": {
     "sql": {
-      "preload": ["sqlite:opd-prep.db"]
+      "preload": [
+        "sqlite:opd-prep.db"
+      ]
     }
   },
   "bundle": {

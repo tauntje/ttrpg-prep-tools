@@ -3,6 +3,10 @@ import type {
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
 } from "react";
+import {
+  nextSelection,
+  selectionMode,
+} from "../../../shared/model/multiSelection";
 import { pageSizeForOrientation } from "../../../shared/model/page";
 import { sheetSlot, type SheetGrid } from "../../../shared/model/sheet";
 import type { PageOrientation } from "../../../types/page";
@@ -13,8 +17,8 @@ import { TokenView } from "./TokenView";
 interface TokenSheetProps {
   orientation: PageOrientation;
   tokens: Token[];
-  selectedId: string | null;
-  onSelect: (id: string) => void;
+  selectedIds: string[];
+  onSelectionChange: (ids: string[]) => void;
   onMoveImage: (id: string, offset: { xMm: number; yMm: number }) => void;
 }
 
@@ -41,18 +45,29 @@ interface MoveGesture {
 export function TokenSheet({
   orientation,
   tokens,
-  selectedId,
-  onSelect,
+  selectedIds,
+  onSelectionChange,
   onMoveImage,
 }: TokenSheetProps) {
   const page = pageSizeForOrientation(orientation);
   const pages = tokenPages(orientation, tokens);
   const moveRef = useRef<MoveGesture | null>(null);
+  const selectedSet = new Set(selectedIds);
+  const order = tokens.map((token) => token.id);
   const emptyGrid = tokenGrid(orientation, DEFAULT_TOKEN_SIZE_MM);
   const sheets =
     pages.length > 0
       ? pages
       : [{ sizeMm: DEFAULT_TOKEN_SIZE_MM, grid: emptyGrid, tokens: [] }];
+
+  function handleBackgroundPointerDown(event: ReactPointerEvent<HTMLDivElement>) {
+    const target = event.target;
+    if (target instanceof HTMLElement && target.closest(".token-slot") !== null) {
+      return;
+    }
+
+    onSelectionChange([]);
+  }
 
   function handlePointerDown(event: ReactPointerEvent<HTMLDivElement>, token: Token) {
     if (event.button !== 0) {
@@ -112,7 +127,13 @@ export function TokenSheet({
     }
 
     if (!gesture.moved) {
-      onSelect(token.id);
+      const mode = selectionMode(event);
+
+      if (mode === "replace" && selectedIds.length === 1 && selectedIds[0] === token.id) {
+        return;
+      }
+
+      onSelectionChange(nextSelection(selectedIds, order, token.id, mode));
     }
   }
 
@@ -142,7 +163,7 @@ export function TokenSheet({
 
   function renderToken(token: Token, index: number, grid: SheetGrid) {
     const slot = sheetSlot(grid, index);
-    const selected = token.id === selectedId;
+    const selected = selectedSet.has(token.id);
 
     return (
       <div
@@ -177,7 +198,7 @@ export function TokenSheet({
           aria-label={`A4 page ${pageIndex + 1}, ${orientation}`}
           style={{ width: `${page.widthMm}mm`, height: `${page.heightMm}mm` }}
         >
-          <div className="token-page-content">
+          <div className="token-page-content" onPointerDown={handleBackgroundPointerDown}>
             {sheet.tokens.length === 0 && (
               <p className="token-page-hint screen-only">
                 Select Import picture to put a token on this page.

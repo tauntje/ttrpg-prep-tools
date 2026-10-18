@@ -32,9 +32,52 @@ button {
 }
 
 .workspace {
+  position: relative;
   display: flex;
   flex: 1;
   min-height: 0;
+}
+
+.bulk-action-bar {
+  position: absolute;
+  bottom: 76px;
+  left: 50%;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  color: var(--color-shell-ink);
+  background: var(--color-shell-bg);
+  border: 1px solid rgb(242 235 221 / 18%);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-page);
+  transform: translateX(-50%);
+}
+
+.bulk-action-count {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bulk-action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.bulk-action-bar button {
+  padding: 7px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--color-shell-ink);
+  background: rgb(242 235 221 / 10%);
+  border: 1px solid rgb(242 235 221 / 18%);
+  border-radius: var(--radius-sm);
+}
+
+.bulk-action-bar button:hover {
+  background: rgb(242 235 221 / 20%);
+  border-color: rgb(242 235 221 / 32%);
 }
 
 .sidebar {

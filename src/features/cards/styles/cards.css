@@ -122,6 +122,43 @@
   margin-bottom: 0;
 }
 
+/* Inline card editor */
+
+@media screen {
+  .card-slot.is-editing .card-view {
+    display: none;
+  }
+}
+
+.card-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+  cursor: auto;
+}
+
+.card-editor .card-field {
+  gap: 1mm;
+  font-size: 9pt;
+}
+
+.card-editor .card-field input,
+.card-editor .card-field textarea {
+  padding: 1.5mm 2mm;
+  font-size: 10pt;
+}
+
+.card-editor .card-field:last-of-type {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.card-editor .card-field:last-of-type textarea {
+  flex: 1 1 auto;
+  min-height: 0;
+  resize: none;
+}
+
 /* Editor */
 
 .card-list,
