@@ -6,9 +6,16 @@ interface TextControlProps {
   onChange: (value: string) => void;
   multiline?: boolean;
   rows?: number;
+  autoFocus?: boolean;
 }
 
-export function TextControl({ value, onChange, multiline = false, rows }: TextControlProps) {
+export function TextControl({
+  value,
+  onChange,
+  multiline = false,
+  rows,
+  autoFocus = false,
+}: TextControlProps) {
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) {
     if (!event.ctrlKey || event.key.toLowerCase() !== "w") {
       return;
@@ -35,6 +42,7 @@ export function TextControl({ value, onChange, multiline = false, rows }: TextCo
       <textarea
         rows={rows}
         value={value}
+        autoFocus={autoFocus}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
       />
@@ -42,6 +50,12 @@ export function TextControl({ value, onChange, multiline = false, rows }: TextCo
   }
 
   return (
-    <input type="text" value={value} onChange={handleChange} onKeyDown={handleKeyDown} />
+    <input
+      type="text"
+      value={value}
+      autoFocus={autoFocus}
+      onChange={handleChange}
+      onKeyDown={handleKeyDown}
+    />
   );
 }

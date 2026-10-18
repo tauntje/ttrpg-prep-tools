@@ -1,4 +1,4 @@
-export type TextBlockType = "information" | "dwellers" | "legend";
+export type TextBlockType = "context" | "dwellers" | "legend";
 
 export type TextBlockThemeId = "terracotta" | "teal" | "indigo";
 
@@ -11,8 +11,4 @@ export interface TextBlock {
   theme: TextBlockThemeId;
   bullets: string[];
   text: string;
-  xMm: number;
-  yMm: number;
-  widthMm: number;
-  heightMm: number;
 }
