@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useDungeonStore } from "../../../app/store";
+import { BulkActionBar } from "../../../shared/components/BulkActionBar";
 import { OrientationToggle } from "../../../shared/components/OrientationToggle";
 import { PageViewport } from "../../../shared/components/PageViewport";
 import { Sidebar } from "../../../shared/components/Sidebar";
@@ -28,17 +29,14 @@ export function OnePageDungeonTab() {
     setPins,
     textBlocks,
     setTextBlocks,
-    selectedId,
-    setSelectedId,
+    selectedIds,
+    setSelectedIds,
   } = useDungeonStore();
 
   useEffect(() => {
-    const id: string | null = selectedId;
-    if (id === null) {
+    if (selectedIds.length === 0) {
       return;
     }
-
-    const selectedItemId = id;
 
     function handleDeleteKey(event: KeyboardEvent) {
       if (event.key !== "Backspace" && event.key !== "Delete") {
@@ -58,16 +56,12 @@ export function OnePageDungeonTab() {
       }
 
       event.preventDefault();
-      // An id belongs to one list only.
-      handleDeleteImage(selectedItemId);
-      handleDeletePin(selectedItemId);
-      handleDeleteTextBlock(selectedItemId);
-      setSelectedId(null);
+      handleDeleteSelected();
     }
 
     window.addEventListener("keydown", handleDeleteKey);
     return () => window.removeEventListener("keydown", handleDeleteKey);
-  }, [selectedId, images, pins, textBlocks]);
+  }, [selectedIds, images, pins, textBlocks]);
 
   function handleInsertTextBlock(textBlock: TextBlock) {
     setTextBlocks((current) => [...current, textBlock]);
@@ -108,21 +102,6 @@ export function OnePageDungeonTab() {
     );
   }
 
-  function handleDeleteImage(id: string) {
-    const removedPinIds = new Set(
-      pins.filter((pin) => pin.imageId === id).map((pin) => pin.id)
-    );
-    const remainingPins = renumberPins(pins.filter((pin) => pin.imageId !== id));
-    const remainingBlocks = textBlocks.filter(
-      (textBlock) =>
-        textBlock.pinId === undefined || !removedPinIds.has(textBlock.pinId)
-    );
-
-    setImages((current) => current.filter((image) => image.id !== id));
-    setPins(remainingPins);
-    setTextBlocks(syncLegendTitles(remainingPins, remainingBlocks));
-  }
-
   function handleUpdateTextBlock(id: string, patch: Partial<TextBlock>) {
     setTextBlocks((current) =>
       current.map((textBlock) =>
@@ -131,12 +110,37 @@ export function OnePageDungeonTab() {
     );
   }
 
-  function handleDeleteTextBlock(id: string) {
-    setTextBlocks((current) => current.filter((textBlock) => textBlock.id !== id));
-  }
+  /**
+   * Delete the selected images, pins and text blocks.
+   * A removed image also removes its pins and their legend blocks.
+   */
+  function handleDeleteSelected() {
+    if (selectedIds.length === 0) {
+      return;
+    }
 
-  function handleSelect(id: string | null) {
-    setSelectedId(id);
+    const removed = new Set(selectedIds);
+    const removedImageIds = new Set(
+      images.filter((image) => removed.has(image.id)).map((image) => image.id)
+    );
+    const removedPinIds = new Set(
+      pins
+        .filter((pin) => removed.has(pin.id) || removedImageIds.has(pin.imageId))
+        .map((pin) => pin.id)
+    );
+    const remainingPins = renumberPins(
+      pins.filter((pin) => !removedPinIds.has(pin.id))
+    );
+    const remainingBlocks = textBlocks.filter(
+      (textBlock) =>
+        !removed.has(textBlock.id) &&
+        (textBlock.pinId === undefined || !removedPinIds.has(textBlock.pinId))
+    );
+
+    setImages((current) => current.filter((image) => !removedImageIds.has(image.id)));
+    setPins(remainingPins);
+    setTextBlocks(syncLegendTitles(remainingPins, remainingBlocks));
+    setSelectedIds([]);
   }
 
   return (
@@ -154,8 +158,8 @@ export function OnePageDungeonTab() {
             images={images}
             pins={pins}
             textBlocks={textBlocks}
-            selectedId={selectedId}
-            onSelect={handleSelect}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
             onUpdateImage={handleUpdateImage}
             onUpdateTextBlock={handleUpdateTextBlock}
             onAddPin={handleAddPin}
@@ -163,6 +167,14 @@ export function OnePageDungeonTab() {
             onUpdatePin={handleUpdatePin}
           />
         </PageViewport>
+        <BulkActionBar
+          count={selectedIds.length > 1 ? selectedIds.length : 0}
+          onClear={() => setSelectedIds([])}
+        >
+          <button type="button" onClick={handleDeleteSelected}>
+            Delete
+          </button>
+        </BulkActionBar>
       </div>
     </>
   );

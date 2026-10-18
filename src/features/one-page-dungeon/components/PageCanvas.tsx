@@ -25,6 +25,10 @@ import {
   type ResizeCorner,
   type ResizeSession,
 } from "../../../shared/model/resize";
+import {
+  nextSelection,
+  selectionMode,
+} from "../../../shared/model/multiSelection";
 import { pageSizeForOrientation } from "../../../shared/model/page";
 import { moveFraction, pinFractionAt, pinPositionMm, type PinFraction } from "../model/pin";
 import { TEXT_BLOCK_THEMES } from "../model/textBlockTheme";
@@ -36,8 +40,8 @@ interface PageCanvasProps {
   images: PlacedImage[];
   pins: Pin[];
   textBlocks: TextBlock[];
-  selectedId: string | null;
-  onSelect: (id: string | null) => void;
+  selectedIds: string[];
+  onSelectionChange: (ids: string[]) => void;
   onUpdateImage: (id: string, patch: Partial<PlacedImage>) => void;
   onUpdateTextBlock: (id: string, patch: Partial<TextBlock>) => void;
   onAddPin: (imageId: string, fraction: PinFraction) => void;
@@ -91,8 +95,8 @@ export function PageCanvas({
   images,
   pins,
   textBlocks,
-  selectedId,
-  onSelect,
+  selectedIds,
+  onSelectionChange,
   onUpdateImage,
   onUpdateTextBlock,
   onAddPin,
@@ -101,6 +105,13 @@ export function PageCanvas({
 }: PageCanvasProps) {
   const page = pageSizeForOrientation(orientation);
   const flow = textBlockFlow(images, page);
+  const selectedSet = new Set(selectedIds);
+  const editId = selectedIds.length === 1 ? selectedIds[0] : null;
+  const order = [
+    ...images.map((image) => image.id),
+    ...textBlocks.map((textBlock) => textBlock.id),
+    ...pins.map((pin) => pin.id),
+  ];
   const pageRef = useRef<HTMLElement>(null);
   const areaRef = useRef<HTMLDivElement>(null);
   const pointerScaleRef = useRef(1);
@@ -190,7 +201,7 @@ export function PageCanvas({
       return;
     }
 
-    onSelect(null);
+    onSelectionChange([]);
   }
 
   function handleFramePointerDown(
@@ -250,7 +261,9 @@ export function PageCanvas({
     }
 
     if (!gesture.moved) {
-      onSelect(image.id);
+      onSelectionChange(
+        nextSelection(selectedIds, order, image.id, selectionMode(event))
+      );
     }
   }
 
@@ -418,16 +431,14 @@ export function PageCanvas({
     event: ReactPointerEvent<HTMLDivElement>,
     textBlock: TextBlock
   ) {
-    if (event.button !== 0) {
-      return;
-    }
-
-    if (selectedId === textBlock.id) {
+    if (selectedIds.length === 1 && selectedIds[0] === textBlock.id) {
       return;
     }
 
     setEditField(textBlockFieldFor(event.target));
-    onSelect(textBlock.id);
+    onSelectionChange(
+      nextSelection(selectedIds, order, textBlock.id, selectionMode(event))
+    );
   }
 
   function pinMmPerPx(): number | null {
@@ -560,7 +571,7 @@ export function PageCanvas({
         onPointerDown={handleBackgroundPointerDown}
       >
         {images.map((image) => {
-          const selected = image.id === selectedId;
+          const selected = selectedSet.has(image.id);
 
           return (
             <div
@@ -593,7 +604,7 @@ export function PageCanvas({
                   }}
                 />
               </div>
-              {selected && (
+              {image.id === editId && (
                 <>
                   {CORNER_HANDLES.map((corner) => (
                     <span
@@ -640,13 +651,15 @@ export function PageCanvas({
             />
           )}
           {textBlocks.map((textBlock) => {
-            const selected = textBlock.id === selectedId;
+            const selected = selectedSet.has(textBlock.id);
             const theme = TEXT_BLOCK_THEMES[textBlock.theme];
 
             return (
               <div
                 key={textBlock.id}
-                className={`text-block-frame${selected ? " is-selected" : ""}`}
+                className={`text-block-frame${selected ? " is-selected" : ""}${
+                  textBlock.id === editId ? " is-editing" : ""
+                }`}
                 onPointerDown={(event) => handleTextBlockPointerDown(event, textBlock)}
               >
                 <article
@@ -667,7 +680,7 @@ export function PageCanvas({
                     </div>
                   )}
                 </article>
-                {selected && (
+                {textBlock.id === editId && (
                   <TextBlockEditor
                     textBlock={textBlock}
                     field={editField}
@@ -685,7 +698,7 @@ export function PageCanvas({
           }
 
           const position = pinPositionMm(pin, image);
-          const selected = pin.id === selectedId;
+          const selected = selectedSet.has(pin.id);
 
           return (
             <button
@@ -701,7 +714,9 @@ export function PageCanvas({
               onKeyDown={(event) => handlePinKeyDown(event, pin, image)}
               onClick={(event) => {
                 event.stopPropagation();
-                onSelect(pin.id);
+                onSelectionChange(
+                  nextSelection(selectedIds, order, pin.id, selectionMode(event))
+                );
               }}
               onContextMenu={(event) => {
                 event.preventDefault();

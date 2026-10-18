@@ -125,7 +125,7 @@
 /* Inline card editor */
 
 @media screen {
-  .card-slot.is-selected .card-view {
+  .card-slot.is-editing .card-view {
     display: none;
   }
 }

@@ -36,6 +36,8 @@
 }
 
 .text-block-flow-gap {
+  float: left;
+  width: 100%;
   visibility: hidden;
 }
 
@@ -56,7 +58,7 @@
 }
 
 @media screen {
-  .text-block-frame.is-selected .text-block-view {
+  .text-block-frame.is-editing .text-block-view {
     display: none;
   }
 }

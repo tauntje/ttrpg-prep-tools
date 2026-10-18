@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useCardsStore } from "../../../app/store";
+import { BulkActionBar } from "../../../shared/components/BulkActionBar";
 import { OrientationToggle } from "../../../shared/components/OrientationToggle";
 import { PageViewport } from "../../../shared/components/PageViewport";
 import { Sidebar } from "../../../shared/components/Sidebar";
@@ -14,7 +15,7 @@ import { CardSheet } from "./CardSheet";
 import { cardGrid, createCard } from "../model/card";
 
 export function CardsTab() {
-  const { orientation, setOrientation, cards, setCards, selectedId, setSelectedId } =
+  const { orientation, setOrientation, cards, setCards, selectedIds, setSelectedIds, selectedId, setSelectedId } =
     useCardsStore();
   const [savedCards, setSavedCards] = useState<Card[]>([]);
   const [unsavedIds, setUnsavedIds] = useState<Set<string>>(new Set());
@@ -25,12 +26,9 @@ export function CardsTab() {
   const pageCount = Math.max(splitIntoPages(grid, cards).length, 1);
 
   useEffect(() => {
-    const id: string | null = selectedId;
-    if (id === null) {
+    if (selectedIds.length === 0) {
       return;
     }
-
-    const selectedCardId = id;
 
     function handleDeleteKey(event: KeyboardEvent) {
       if (event.key !== "Backspace" && event.key !== "Delete") {
@@ -50,12 +48,12 @@ export function CardsTab() {
       }
 
       event.preventDefault();
-      handleRemoveCard(selectedCardId);
+      handleDeleteSelected();
     }
 
     window.addEventListener("keydown", handleDeleteKey);
     return () => window.removeEventListener("keydown", handleDeleteKey);
-  }, [selectedId, cards]);
+  }, [selectedIds, cards]);
 
   function markUnsaved(id: string) {
     setUnsavedIds((current) => new Set(current).add(id));
@@ -118,7 +116,44 @@ export function CardsTab() {
       next.delete(id);
       return next;
     });
-    setSelectedId((current) => (current === id ? null : current));
+    setSelectedIds((current) => current.filter((item) => item !== id));
+  }
+
+  function handleDeleteSelected() {
+    if (selectedIds.length === 0) {
+      return;
+    }
+
+    const removed = new Set(selectedIds);
+    setCards((current) => current.filter((card) => !removed.has(card.id)));
+    setUnsavedIds((current) => {
+      const next = new Set(current);
+      for (const id of selectedIds) {
+        next.delete(id);
+      }
+      return next;
+    });
+    setSelectedIds([]);
+  }
+
+  async function handleSaveSelected() {
+    const selectedCards = cards.filter((card) => selectedIds.includes(card.id));
+
+    try {
+      for (const card of selectedCards) {
+        await cardRepository.save(card);
+      }
+
+      setUnsavedIds((current) => {
+        const next = new Set(current);
+        for (const card of selectedCards) {
+          next.delete(card.id);
+        }
+        return next;
+      });
+    } catch (error) {
+      console.error("The app cannot save the cards.", error);
+    }
   }
 
   function handleLoadCard(card: Card) {
@@ -177,11 +212,19 @@ export function CardsTab() {
           <CardSheet
             orientation={orientation}
             cards={cards}
-            selectedId={selectedId}
-            onSelect={setSelectedId}
+            selectedIds={selectedIds}
+            onSelectionChange={setSelectedIds}
             onUpdateCard={handleUpdateCard}
           />
         </PageViewport>
+        <BulkActionBar count={selectedIds.length > 1 ? selectedIds.length : 0} onClear={() => setSelectedIds([])}>
+          <button type="button" onClick={() => void handleSaveSelected()}>
+            Save to library
+          </button>
+          <button type="button" onClick={handleDeleteSelected}>
+            Delete
+          </button>
+        </BulkActionBar>
       </div>
     </>
   );
