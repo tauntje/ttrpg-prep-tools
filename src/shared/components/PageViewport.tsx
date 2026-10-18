@@ -40,8 +40,8 @@ interface PinchGestureEvent extends Event {
   clientY: number;
 }
 
-/** The page moves faster than the pointer during a pan. */
-const PAN_TRACKING = 2;
+/** The page follows the pointer during a pan. */
+const PAN_TRACKING = 1;
 
 /** A control keeps its own key input. */
 function isControl(target: EventTarget | null): boolean {

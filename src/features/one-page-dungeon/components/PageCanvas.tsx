@@ -16,6 +16,7 @@ import {
   startDrag,
   type DragSession,
   type PointMm,
+  type PointerPosition,
 } from "../../../shared/model/drag";
 import { cropTo, startCrop, type CropEdge, type CropSession } from "../model/crop";
 import {
@@ -88,12 +89,72 @@ export function PageCanvas({
   onUpdatePin,
 }: PageCanvasProps) {
   const page = pageSizeForOrientation(orientation);
+  const pageRef = useRef<HTMLElement>(null);
   const areaRef = useRef<HTMLDivElement>(null);
+  const pointerScaleRef = useRef(1);
   const moveRef = useRef<MoveGesture | null>(null);
   const pinMoveRef = useRef<PinMoveGesture | null>(null);
   const resizeRef = useRef<ResizeSession | null>(null);
   const cropRef = useRef<CropSession | null>(null);
   const textResizeRef = useRef<FrameResizeSession | null>(null);
+
+  function pageZoom(): number {
+    const pageElement = pageRef.current;
+    if (pageElement === null) {
+      return 1;
+    }
+
+    const style = getComputedStyle(pageElement);
+    const zoom = Number.parseFloat(style.zoom);
+    if (Number.isFinite(zoom) && zoom > 0) {
+      return zoom;
+    }
+
+    const variable = Number.parseFloat(style.getPropertyValue("--page-zoom"));
+    return Number.isFinite(variable) && variable > 0 ? variable : 1;
+  }
+
+  /**
+   * Get the scale from the pointer pixels to the rect pixels.
+   *
+   * WebKit gives layout pixels in a rect and visual pixels in a pointer event.
+   * Chromium gives visual pixels in both. The CSS zoom makes the difference.
+   */
+  function pointerScale(): number {
+    const pageElement = pageRef.current;
+    if (pageElement === null) {
+      return 1;
+    }
+
+    const zoom = pageZoom();
+    if (zoom === 1) {
+      return 1;
+    }
+
+    const rectWidth = pageElement.getBoundingClientRect().width;
+    const layoutWidth = pageElement.offsetWidth;
+    if (rectWidth <= 0 || layoutWidth <= 0) {
+      return 1;
+    }
+
+    const rectHasZoom =
+      Math.abs(rectWidth - layoutWidth * zoom) <= Math.abs(rectWidth - layoutWidth);
+    return rectHasZoom ? 1 : 1 / zoom;
+  }
+
+  function rememberPointerScale() {
+    pointerScaleRef.current = pointerScale();
+  }
+
+  /** Put the pointer in the same pixel space as the element rect. */
+  function scaledPointer(event: PointerPosition): PointerPosition {
+    const scale = pointerScaleRef.current;
+    if (scale === 1) {
+      return { clientX: event.clientX, clientY: event.clientY };
+    }
+
+    return { clientX: event.clientX * scale, clientY: event.clientY * scale };
+  }
 
   function boundsFor(widthMm: number, frameElement: HTMLElement) {
     const areaElement = areaRef.current;
@@ -127,8 +188,9 @@ export function PageCanvas({
       return;
     }
 
+    rememberPointerScale();
     moveRef.current = {
-      session: startDrag(image, event, bounds),
+      session: startDrag(image, scaledPointer(event), bounds),
       pointerId: event.pointerId,
       element: event.currentTarget,
       moved: false,
@@ -143,16 +205,18 @@ export function PageCanvas({
       return;
     }
 
+    const pointer = scaledPointer(event);
+
     if (!gesture.moved) {
-      const deltaX = event.clientX - gesture.session.clientX;
-      const deltaY = event.clientY - gesture.session.clientY;
+      const deltaX = pointer.clientX - gesture.session.clientX;
+      const deltaY = pointer.clientY - gesture.session.clientY;
       if (Math.hypot(deltaX, deltaY) < DRAG_THRESHOLD_PX) {
         return;
       }
       gesture.moved = true;
     }
 
-    const position = dragTo(gesture.session, event);
+    const position = dragTo(gesture.session, pointer);
     gesture.onMove(gesture.session.id, position);
   }
 
@@ -183,9 +247,10 @@ export function PageCanvas({
       return;
     }
 
+    const scale = pointerScale();
     const mmPerPx = image.widthMm / frameRect.width;
-    const offsetXMm = (event.clientX - frameRect.left) * mmPerPx;
-    const offsetYMm = (event.clientY - frameRect.top) * mmPerPx;
+    const offsetXMm = (event.clientX * scale - frameRect.left) * mmPerPx;
+    const offsetYMm = (event.clientY * scale - frameRect.top) * mmPerPx;
     onAddPin(image.id, pinFractionAt(image, offsetXMm, offsetYMm));
   }
 
@@ -211,12 +276,13 @@ export function PageCanvas({
       return;
     }
 
+    rememberPointerScale();
     const session = startResize(
       image,
       corner,
       frameRect,
       areaElement.getBoundingClientRect(),
-      event
+      scaledPointer(event)
     );
     if (session === null) {
       return;
@@ -233,7 +299,7 @@ export function PageCanvas({
       return;
     }
 
-    onUpdateImage(session.id, resizeTo(session, event));
+    onUpdateImage(session.id, resizeTo(session, scaledPointer(event)));
   }
 
   function handleResizePointerUp(event: ReactPointerEvent<HTMLSpanElement>) {
@@ -264,12 +330,13 @@ export function PageCanvas({
       return;
     }
 
+    rememberPointerScale();
     const session = startCrop(
       image,
       edge,
       frameRect,
       areaElement.getBoundingClientRect(),
-      event
+      scaledPointer(event)
     );
     if (session === null) {
       return;
@@ -286,7 +353,7 @@ export function PageCanvas({
       return;
     }
 
-    onUpdateImage(session.id, cropTo(session, event));
+    onUpdateImage(session.id, cropTo(session, scaledPointer(event)));
   }
 
   function handleCropPointerUp(event: ReactPointerEvent<HTMLSpanElement>) {
@@ -342,8 +409,9 @@ export function PageCanvas({
       return;
     }
 
+    rememberPointerScale();
     moveRef.current = {
-      session: startDrag(textBlock, event, bounds),
+      session: startDrag(textBlock, scaledPointer(event), bounds),
       pointerId: event.pointerId,
       element: event.currentTarget,
       moved: false,
@@ -388,12 +456,13 @@ export function PageCanvas({
       return;
     }
 
+    rememberPointerScale();
     const session = startFrameResize(
       textBlock,
       corner,
       frameRect,
       areaElement.getBoundingClientRect(),
-      event
+      scaledPointer(event)
     );
     if (session === null) {
       return;
@@ -410,7 +479,7 @@ export function PageCanvas({
       return;
     }
 
-    onUpdateTextBlock(session.id, frameResizeTo(session, event));
+    onUpdateTextBlock(session.id, frameResizeTo(session, scaledPointer(event)));
   }
 
   function handleTextBlockResizePointerUp(event: ReactPointerEvent<HTMLSpanElement>) {
@@ -486,13 +555,15 @@ export function PageCanvas({
       return;
     }
 
+    rememberPointerScale();
+    const pointer = scaledPointer(event);
     pinMoveRef.current = {
       id: pin.id,
       image,
       xFraction: pin.xFraction,
       yFraction: pin.yFraction,
-      clientX: event.clientX,
-      clientY: event.clientY,
+      clientX: pointer.clientX,
+      clientY: pointer.clientY,
       mmPerPx,
       pointerId: event.pointerId,
       element: event.currentTarget,
@@ -507,17 +578,19 @@ export function PageCanvas({
       return;
     }
 
+    const pointer = scaledPointer(event);
+
     if (!gesture.moved) {
-      const deltaX = event.clientX - gesture.clientX;
-      const deltaY = event.clientY - gesture.clientY;
+      const deltaX = pointer.clientX - gesture.clientX;
+      const deltaY = pointer.clientY - gesture.clientY;
       if (Math.hypot(deltaX, deltaY) < DRAG_THRESHOLD_PX) {
         return;
       }
       gesture.moved = true;
     }
 
-    const deltaXMm = (event.clientX - gesture.clientX) * gesture.mmPerPx;
-    const deltaYMm = (event.clientY - gesture.clientY) * gesture.mmPerPx;
+    const deltaXMm = (pointer.clientX - gesture.clientX) * gesture.mmPerPx;
+    const deltaYMm = (pointer.clientY - gesture.clientY) * gesture.mmPerPx;
     onUpdatePin(
       gesture.id,
       moveFraction(
@@ -569,6 +642,7 @@ export function PageCanvas({
   return (
     <section
       className="page"
+      ref={pageRef}
       aria-label={`A4 page, ${orientation}`}
       style={{
         width: `${page.widthMm}mm`,

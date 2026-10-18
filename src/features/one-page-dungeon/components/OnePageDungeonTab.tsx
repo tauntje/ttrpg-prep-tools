@@ -3,7 +3,7 @@ import { useDungeonStore } from "../../../app/store";
 import { OrientationToggle } from "../../../shared/components/OrientationToggle";
 import { PageViewport } from "../../../shared/components/PageViewport";
 import { Sidebar } from "../../../shared/components/Sidebar";
-import { pageRule } from "../../../shared/model/page";
+import { pageRule, pageSizeForOrientation } from "../../../shared/model/page";
 import type { PlacedImage } from "../../../types/image";
 import type { Pin } from "../../../types/pin";
 import type { TextBlock } from "../../../types/textBlock";
@@ -79,9 +79,21 @@ export function OnePageDungeonTab() {
   }
 
   function handleAddPin(imageId: string, fraction: PinFraction) {
+    const image = images.find((item) => item.id === imageId);
+    if (image === undefined) {
+      return;
+    }
+
+    const page = pageSizeForOrientation(orientation);
     const number = nextPinNumber(pins);
     const pin = createPin(imageId, fraction, number);
-    const legend = createLegendTextBlock(pin.id, number, textBlocks.length);
+    const legend = createLegendTextBlock(
+      pin.id,
+      number,
+      textBlocks.length,
+      image,
+      page
+    );
     setPins((current) => [...current, pin]);
     setTextBlocks((current) => [...current, legend]);
   }
