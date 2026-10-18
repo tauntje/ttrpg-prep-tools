@@ -11,7 +11,7 @@ interface CardViewProps {
  */
 export function CardView({ card }: CardViewProps) {
   return (
-    <article className="card">
+    <article className="card card-view">
       <header className="card-header">
         <h2>{card.title}</h2>
         {card.subtitle !== "" && <p className="card-subtitle">{card.subtitle}</p>}

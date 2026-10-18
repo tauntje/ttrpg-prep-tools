@@ -418,6 +418,10 @@ export function PageCanvas({
     event: ReactPointerEvent<HTMLDivElement>,
     textBlock: TextBlock
   ) {
+    if (event.button !== 0) {
+      return;
+    }
+
     if (selectedId === textBlock.id) {
       return;
     }

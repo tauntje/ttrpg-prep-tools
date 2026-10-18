@@ -32,11 +32,10 @@
   position: absolute;
   column-gap: 5mm;
   column-fill: auto;
+  pointer-events: none;
 }
 
 .text-block-flow-gap {
-  float: left;
-  width: 100%;
   visibility: hidden;
 }
 
@@ -44,6 +43,7 @@
   position: relative;
   margin-bottom: 5mm;
   break-inside: avoid;
+  pointer-events: auto;
 }
 
 .text-block-frame.is-selected::after {

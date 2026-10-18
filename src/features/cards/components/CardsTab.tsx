@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCardsStore } from "../../../app/store";
 import { OrientationToggle } from "../../../shared/components/OrientationToggle";
 import { PageViewport } from "../../../shared/components/PageViewport";
@@ -23,6 +23,39 @@ export function CardsTab() {
   const selectedCard = cards.find((card) => card.id === selectedId);
   const grid = cardGrid(orientation);
   const pageCount = Math.max(splitIntoPages(grid, cards).length, 1);
+
+  useEffect(() => {
+    const id: string | null = selectedId;
+    if (id === null) {
+      return;
+    }
+
+    const selectedCardId = id;
+
+    function handleDeleteKey(event: KeyboardEvent) {
+      if (event.key !== "Backspace" && event.key !== "Delete") {
+        return;
+      }
+
+      const target = event.target as HTMLElement | null;
+      if (
+        target !== null &&
+        (target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.tagName === "BUTTON")
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      handleRemoveCard(selectedCardId);
+    }
+
+    window.addEventListener("keydown", handleDeleteKey);
+    return () => window.removeEventListener("keydown", handleDeleteKey);
+  }, [selectedId, cards]);
 
   function markUnsaved(id: string) {
     setUnsavedIds((current) => new Set(current).add(id));
@@ -129,9 +162,7 @@ export function CardsTab() {
           ) : (
             selectedCard !== undefined && (
               <CardForm
-                card={selectedCard}
                 isUnsaved={unsavedIds.has(selectedCard.id)}
-                onChange={(patch) => handleUpdateCard(selectedCard.id, patch)}
                 onSave={() => handleSaveCard(selectedCard.id)}
                 onDelete={() => handleRemoveCard(selectedCard.id)}
               />
@@ -148,6 +179,7 @@ export function CardsTab() {
             cards={cards}
             selectedId={selectedId}
             onSelect={setSelectedId}
+            onUpdateCard={handleUpdateCard}
           />
         </PageViewport>
       </div>
